@@ -15,10 +15,44 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { GoogleIcon } from '@/components/icons'; 
-import { Loader2, X } from 'lucide-react';
+import { Loader2, X, Sparkles, Layers, Brain, Lightbulb, Share2, SunMoon, Fingerprint } from 'lucide-react';
 import { useAuth } from '@/contexts/auth-context';
+
+const features = [
+  {
+    icon: Sparkles,
+    title: 'AI-Powered Flashcards',
+    description: 'Generate and summarize flashcards with AI.',
+  },
+  {
+    icon: Layers,
+    title: 'Organize Your Learning',
+    description: 'Create custom decks and manage your study materials.',
+  },
+  {
+    icon: Brain,
+    title: 'Interactive Quizzing',
+    description: 'Test your knowledge with engaging quiz sessions.',
+  },
+  {
+    icon: Lightbulb,
+    title: 'Simplified Explanations',
+    description: 'Get complex topics explained clearly by AI.',
+  },
+  {
+    icon: Share2,
+    title: 'Shareable Decks',
+    description: 'Easily share your study decks with friends or classmates.',
+  },
+  {
+    icon: SunMoon,
+    title: 'Light & Dark Mode',
+    description: 'Study comfortably, any time of day or night.',
+  },
+];
 
 export default function LoginPage() {
   const router = useRouter();
@@ -28,10 +62,11 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [currentTab, setCurrentTab] = useState('signin');
 
   useEffect(() => {
     if (!authLoading && user) {
-      router.push('/'); // Redirect to home if already logged in
+      router.push('/'); 
     }
   }, [user, authLoading, router]);
 
@@ -57,7 +92,6 @@ export default function LoginPage() {
           break;
         case 'auth/popup-closed-by-user':
           errorMessage = 'Google Sign-In cancelled.';
-          // Don't show toast for this specific case, but still log it.
           console.log(errorMessage);
           return; 
         default:
@@ -107,114 +141,118 @@ export default function LoginPage() {
   };
   
   if (authLoading || user) {
-    // Show loading or redirect handled by useEffect
     return <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
   }
 
   return (
-    <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md shadow-xl relative">
+    <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4 animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out">
+      <Card className="w-full max-w-md shadow-xl relative overflow-hidden">
         <Button
             variant="ghost"
             size="icon"
-            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground z-10"
+            className="absolute top-3 right-3 text-muted-foreground hover:text-foreground z-20"
             onClick={() => router.push('/')}
             aria-label="Close"
         >
             <X className="h-5 w-5" />
         </Button>
-        <Tabs defaultValue="signin" className="w-full">
-          <CardHeader className="text-center pt-8"> {/* Added padding top to avoid overlap with X button */}
-            <CardTitle className="text-2xl">Welcome to NOTO</CardTitle>
-            <CardDescription>Sign in or create an account to continue</CardDescription>
+        <Tabs defaultValue="signin" value={currentTab} onValueChange={setCurrentTab} className="w-full">
+          <CardHeader className="text-center pt-8 pb-4 z-10 relative bg-card/80 backdrop-blur-sm">
+            <div className="flex items-center justify-center mb-2">
+                <Fingerprint className="h-10 w-10 text-primary" />
+            </div>
+            <CardTitle className="text-2xl font-bold text-primary">Access Your NOTO Account</CardTitle>
+            <CardDescription>Sign in or create an account to unlock your learning potential.</CardDescription>
             <TabsList className="grid w-full grid-cols-2 mt-4">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
               <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
           </CardHeader>
           
-          <TabsContent value="signin">
-            <form onSubmit={handleEmailSignIn}>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="email-signin">Email</Label>
-                  <Input
-                    id="email-signin"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={isLoading || isGoogleLoading}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="password-signin">Password</Label>
-                  <Input
-                    id="password-signin"
-                    type="password"
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    disabled={isLoading || isGoogleLoading}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col gap-4">
-                <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign In
-                </Button>
-              </CardFooter>
-            </form>
-          </TabsContent>
+          <div className="animate-in fade-in-0 slide-in-from-bottom-5 duration-500 ease-out">
+            <TabsContent value="signin">
+              <form onSubmit={handleEmailSignIn}>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="email-signin">Email</Label>
+                    <Input
+                      id="email-signin"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={isLoading || isGoogleLoading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="password-signin">Password</Label>
+                    <Input
+                      id="password-signin"
+                      type="password"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={isLoading || isGoogleLoading}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-4">
+                  <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign In
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
 
-          <TabsContent value="signup">
-            <form onSubmit={handleEmailSignUp}>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="email-signup">Email</Label>
-                  <Input
-                    id="email-signup"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    disabled={isLoading || isGoogleLoading}
-                  />
-                </div>
-                <div className="space-y-1">
-                  <Label htmlFor="password-signup">Password</Label>
-                  <Input
-                    id="password-signup"
-                    type="password"
-                    placeholder="Create a password (min. 6 chars)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={6}
-                    disabled={isLoading || isGoogleLoading}
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col gap-4">
-                <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
-                  {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Sign Up
-                </Button>
-              </CardFooter>
-            </form>
-          </TabsContent>
+            <TabsContent value="signup">
+              <form onSubmit={handleEmailSignUp}>
+                <CardContent className="space-y-4 pt-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="email-signup">Email</Label>
+                    <Input
+                      id="email-signup"
+                      type="email"
+                      placeholder="you@example.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={isLoading || isGoogleLoading}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label htmlFor="password-signup">Password</Label>
+                    <Input
+                      id="password-signup"
+                      type="password"
+                      placeholder="Create a password (min. 6 chars)"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={6}
+                      disabled={isLoading || isGoogleLoading}
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter className="flex flex-col gap-4">
+                  <Button type="submit" className="w-full" disabled={isLoading || isGoogleLoading}>
+                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Sign Up
+                  </Button>
+                </CardFooter>
+              </form>
+            </TabsContent>
+          </div>
 
-          <div className="px-6 pb-6">
+          <div className="px-6 pb-6 animate-in fade-in-0 slide-in-from-bottom-5 delay-100 duration-500 ease-out">
             <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                 <span className="w-full border-t" />
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-background px-2 text-muted-foreground">
+                <span className="bg-card px-2 text-muted-foreground">
                   Or continue with
                 </span>
               </div>
@@ -232,6 +270,23 @@ export default function LoginPage() {
               )}
               Google
             </Button>
+
+            <Separator className="my-6" />
+
+            <div className="space-y-4 text-sm animate-in fade-in-0 slide-in-from-bottom-5 delay-200 duration-500 ease-out">
+              <h3 className="text-center font-semibold text-primary text-lg">Why NOTO?</h3>
+              <ul className="space-y-3">
+                {features.map((feature, index) => (
+                  <li key={index} className="flex items-start gap-3 p-2 rounded-md hover:bg-muted/50 transition-colors">
+                    <feature.icon className="h-5 w-5 text-accent shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-foreground">{feature.title}</p>
+                      <p className="text-muted-foreground text-xs">{feature.description}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
         </Tabs>
       </Card>
