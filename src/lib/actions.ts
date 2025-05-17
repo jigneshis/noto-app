@@ -1,3 +1,4 @@
+
 'use server';
 import { generateFlashcardsFromText as generateFlashcardsFromTextFlow } from '@/ai/flows/generate-flashcards-from-text';
 import { summarizeContentIntoFlashcards as summarizeContentIntoFlashcardsFlow } from '@/ai/flows/summarize-content-into-flashcards';
@@ -11,7 +12,11 @@ export async function generateFlashcardsFromTextAction(text: string): Promise<Om
     return result.flashcards.map(fc => ({ title: fc.title, front: fc.front, back: fc.back }));
   } catch (error) {
     console.error("Error generating flashcards from text:", error);
-    throw new Error("Failed to generate flashcards using AI.");
+    let errorMessage = "Failed to generate flashcards using AI.";
+    if (error instanceof Error) {
+      errorMessage += ` Details: ${error.message}`;
+    }
+    throw new Error(errorMessage);
   }
 }
 
@@ -22,7 +27,11 @@ export async function summarizeContentIntoFlashcardsAction(content: string): Pro
     return result.map(fc => ({ title: fc.title, front: fc.front, back: fc.back }));
   } catch (error) {
     console.error("Error summarizing content into flashcards:", error);
-    throw new Error("Failed to summarize content using AI.");
+    let errorMessage = "Failed to summarize content using AI.";
+    if (error instanceof Error) {
+      errorMessage += ` Details: ${error.message}`;
+    }
+    throw new Error(errorMessage);
   }
 }
 
@@ -32,6 +41,11 @@ export async function explainContentSimplyAction(content: string): Promise<strin
     return result.simplifiedExplanation;
   } catch (error) {
     console.error("Error explaining content simply:", error);
-    throw new Error("Failed to explain content using AI.");
+    let errorMessage = "Failed to explain content using AI.";
+    if (error instanceof Error) {
+      errorMessage += ` Details: ${error.message}`;
+    }
+    throw new Error(errorMessage);
   }
 }
+
