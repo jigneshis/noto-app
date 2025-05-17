@@ -5,7 +5,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/header';
-import { AuthProvider } from '@/contexts/auth-context';
+// import { AuthProvider } from '@/contexts/auth-context'; // Removed
 import { ThemeProvider } from 'next-themes';
 
 const fontSans = FontSans({
@@ -37,13 +37,13 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange 
         >
-          <AuthProvider>
+          {/* <AuthProvider> Removed AuthProvider */}
             <div className="relative flex min-h-screen flex-col">
               <Header />
               <main className="flex-1">{children}</main>
             </div>
             <Toaster />
-          </AuthProvider>
+          {/* </AuthProvider> Removed AuthProvider */}
         </ThemeProvider>
       </body>
     </html>

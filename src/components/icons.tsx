@@ -2,41 +2,45 @@
 import type { SVGProps } from 'react';
 
 export function Logo(props: SVGProps<SVGSVGElement>) {
+  // Path for the "N" part, slightly stylized
+  const nPath = "M10 20V6H6V4h10v2h-4v14h4v2H6v-2h4z"; 
+  // Adjusted lightbulb to be simpler and more iconic within the N's negative space
+  const lightbulbPath = "M12 10a2 2 0 100-4 2 2 0 000 4zm0-5a3 3 0 110 6 3 3 0 010-6zm-1 6h2v2h-2v-2zm0 3h2v1h-2v-1z";
+
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24" // Simple viewbox for a letter
-      fill="none"
-      stroke="currentColor" // Use currentColor for flexibility
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-labelledby="notoMarkTitle"
+      viewBox="0 0 48 32" // Adjusted viewBox for a wider logo to accommodate "NOTO" text
+      fill="currentColor" // Main fill color
+      aria-labelledby="notoFullLogoTitle"
       role="img"
       {...props}
     >
-      <title id="notoMarkTitle">NOTO "N" Mark</title>
-      {/* Stylized N path */}
-      <path d="M17 3H7v12h10V3zM7 21V11" />
-      <path d="m7 11 10 10" />
+      <title id="notoFullLogoTitle">NOTO Logo</title>
+      
+      {/* N Mark (Stylized) */}
+      <g transform="translate(0, 4)"> {/* Shift N and lightbulb down slightly to center in the blue square */}
+        <path d="M17 3H7v12h10V3zM7 21V11" fill="hsl(var(--primary-foreground))" />
+        <path d="m7 11 10 10" fill="hsl(var(--primary-foreground))" />
 
+        {/* Small decorative circle, simulating a part of the lightbulb idea */}
+         <circle cx="12" cy="8" r="1.5" fill="hsl(var(--accent))"/> 
+      </g>
+
+      {/* Text "NOTO" next to the mark */}
+      <text 
+        x="26" // Position text to the right of the N mark
+        y="20" // Vertically align text with the mark
+        fontFamily="var(--font-geist-sans), Arial, sans-serif"
+        fontSize="16" 
+        fontWeight="bold"
+        fill="hsl(var(--foreground))" // Use theme's foreground color
+      >
+        NOTO
+      </text>
     </svg>
   );
 }
 
-export function GoogleIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 48 48" 
-      width="24px" 
-      height="24px"
-      {...props}
-    >
-      <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
-      <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
-      <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-      <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.574l0.002-0.001l6.19,5.238C39.904,36.304,44,30.608,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-    </svg>
-  )
-}
+// GoogleIcon removed as it was only used in the login page which is being removed.
+// export function GoogleIcon(props: SVGProps<SVGSVGElement>) { ... }

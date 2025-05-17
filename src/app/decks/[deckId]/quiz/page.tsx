@@ -9,25 +9,27 @@ import type { Deck } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth-context';
+// import { useAuth } from '@/contexts/auth-context'; // Removed
 
 export default function QuizPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
-  const { user, loading: authLoading } = useAuth();
+  // const { user, loading: authLoading } = useAuth(); // Removed
   
   const [deck, setDeck] = useState<Deck | null>(null);
+  const [isLoadingDeck, setIsLoadingDeck] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
+  // useEffect(() => { // Removed auth redirection
+  //   if (!authLoading && !user) {
+  //     router.push('/login');
+  //   }
+  // }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user && deckId) { // Only proceed if user is logged in and deckId is present
+    setIsLoadingDeck(true);
+    if (deckId) { // No longer conditional on user
       const currentDeck = store.getDeck(deckId);
       if (currentDeck) {
         if (currentDeck.flashcards.length === 0) {
@@ -41,9 +43,10 @@ export default function QuizPage() {
         router.push('/');
       }
     }
-  }, [deckId, router, toast, user]);
+    setIsLoadingDeck(false);
+  }, [deckId, router, toast]);
 
-  if (authLoading || !user) {
+  if (isLoadingDeck) { // Changed from authLoading || !user
      return (
       <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -52,8 +55,8 @@ export default function QuizPage() {
   }
 
   if (!deck) {
-    // This state can occur briefly or if deck/quiz load fails after auth
-    return <div className="container mx-auto py-8 text-center">Loading quiz details...</div>;
+    // This state can occur if deck/quiz load fails
+    return <div className="container mx-auto py-8 text-center">Quiz not found or failed to load.</div>;
   }
 
   return (

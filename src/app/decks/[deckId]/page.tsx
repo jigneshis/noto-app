@@ -13,29 +13,31 @@ import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Lightbulb } from 'l
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/contexts/auth-context';
+// import { useAuth } from '@/contexts/auth-context'; // Removed
 
 export default function DeckPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
-  const { user, loading: authLoading } = useAuth();
+  // const { user, loading: authLoading } = useAuth(); // Removed
   
   const [deck, setDeck] = useState<Deck | null>(null);
+  const [isLoadingDeck, setIsLoadingDeck] = useState(true);
   const [isFlashcardFormOpen, setIsFlashcardFormOpen] = useState(false);
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
   const [shareableLink, setShareableLink] = useState('');
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    if (!authLoading && !user) {
-      router.push('/login');
-    }
-  }, [user, authLoading, router]);
+  // useEffect(() => { // Removed auth redirection
+  //   if (!authLoading && !user) {
+  //     router.push('/login');
+  //   }
+  // }, [user, authLoading, router]);
 
   useEffect(() => {
-    if (user && deckId) { // Only proceed if user is logged in and deckId is present
+    setIsLoadingDeck(true);
+    if (deckId) { // No longer conditional on user
       const currentDeck = store.getDeck(deckId);
       if (currentDeck) {
         setDeck(currentDeck);
@@ -47,16 +49,18 @@ export default function DeckPage() {
         router.push('/');
       }
     }
-  }, [deckId, router, toast, user]);
+    setIsLoadingDeck(false);
+  }, [deckId, router, toast]);
 
   const refreshDeck = () => {
-    if (user && deckId) {
+    // No longer conditional on user
+    if (deckId) {
       setDeck(store.getDeck(deckId) || null);
     }
   };
 
   const handleFlashcardSubmit = (flashcardData: Omit<Flashcard, 'id'> | Flashcard) => {
-    if (!deck || !user) return;
+    if (!deck) return; // No longer conditional on user
 
     if ('id' in flashcardData && editingFlashcard) { 
       store.updateFlashcardInDeck(deck.id, flashcardData as Flashcard);
@@ -70,13 +74,13 @@ export default function DeckPage() {
   };
 
   const handleEditFlashcard = (flashcard: Flashcard) => {
-    if (!user) return;
+    // No longer conditional on user
     setEditingFlashcard(flashcard);
     setIsFlashcardFormOpen(true);
   };
 
   const handleDeleteFlashcard = (flashcardId: string) => {
-    if (!deck || !user) return;
+    if (!deck) return; // No longer conditional on user
     const fcToDelete = deck.flashcards.find(fc => fc.id === flashcardId);
     store.deleteFlashcardFromDeck(deck.id, flashcardId);
     refreshDeck();
@@ -94,7 +98,7 @@ export default function DeckPage() {
     });
   };
 
-  if (authLoading || !user) {
+  if (isLoadingDeck) { // Changed from authLoading || !user
     return (
       <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -103,8 +107,8 @@ export default function DeckPage() {
   }
 
   if (!deck) {
-    // This state can occur briefly or if deck load fails after auth
-    return <div className="container mx-auto py-8 text-center">Loading deck details...</div>;
+    // This state can occur if deck load fails
+    return <div className="container mx-auto py-8 text-center">Deck not found or failed to load.</div>;
   }
 
   return (
@@ -162,7 +166,7 @@ export default function DeckPage() {
               onEdit={handleEditFlashcard}
               onDelete={handleDeleteFlashcard}
               className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
-              style={{ animationDelay: `${index * 75}ms` }}
+              style={{ animationDelay: `${(index % 9) * 75}ms` }} // Stagger animation
             />
           ))}
         </div>
@@ -202,4 +206,3 @@ function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-

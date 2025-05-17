@@ -2,8 +2,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
+// import { useRouter } from 'next/navigation'; // Not used
+// import Link from 'next/link'; // Not used for login button
 // import Image from 'next/image'; // Removed Image import
 import { Button } from '@/components/ui/button';
 import { DeckCard } from '@/components/deck-card';
@@ -11,12 +11,15 @@ import { DeckForm } from '@/components/deck-form';
 import { AiFlashcardGeneratorDialog } from '@/components/ai-flashcard-generator-dialog';
 import type { Deck } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, Sparkles, Loader2, LogIn, Layers, Brain, Lightbulb, Share2, SunMoon, Zap, BookOpen } from 'lucide-react';
+import { PlusCircle, Sparkles, Layers as LayersIconLucide, Brain, Lightbulb, Share2, Zap, BookOpen, Loader2 } from 'lucide-react'; // Renamed Layers to LayersIconLucide to avoid conflict with local LayersIcon
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth-context';
+// import { useAuth } from '@/contexts/auth-context'; // Removed
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 
+// Features might be used for a separate "About" page or different section later if needed.
+// For now, removing the direct feature display on homepage as it was part of the logged-out view.
+/*
 const features = [
   {
     icon: Sparkles,
@@ -24,7 +27,7 @@ const features = [
     description: 'With the help of turri.ai you can analise and help ur idea to come true',
   },
   {
-    icon: Layers,
+    icon: LayersIconLucide,
     title: 'Organize Your Learning',
     description: 'Create custom decks and manage your study materials efficiently.',
   },
@@ -49,35 +52,34 @@ const features = [
     description: 'Focus your study time effectively with personalized learning tools.',
   },
 ];
-
+*/
 
 export default function HomePage() {
-  const { user, loading: authLoading } = useAuth();
+  // const { user, loading: authLoading } = useAuth(); // Removed
   const [decks, setDecks] = useState<Deck[]>([]);
   const [isDeckFormOpen, setIsDeckFormOpen] = useState(false);
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
   const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
   const { toast } = useToast();
+  const [isLoadingDecks, setIsLoadingDecks] = useState(true); // For initial load
 
   useEffect(() => {
-    if (user && !authLoading) {
-      if (store.getDecks().length === 0) {
-         store.generateSampleData();
-      }
-      setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    } else if (!user && !authLoading) {
-      setDecks([]);
+    setIsLoadingDecks(true);
+    // If no decks exist, generate sample data.
+    // This runs once after the component mounts.
+    if (store.getDecks().length === 0) {
+       store.generateSampleData();
     }
-  }, [user, authLoading]);
+    // Always load decks.
+    setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    setIsLoadingDecks(false);
+  }, []);
 
   const refreshDecks = () => {
-    if (user) { 
-      setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    }
+    setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
   };
 
   const handleDeckSubmit = (deckData: Omit<Deck, 'flashcards' | 'createdAt' | 'updatedAt'> | Deck) => {
-    if (!user) return;
     store.saveDeck(deckData as Deck); 
     refreshDecks();
     toast({ title: editingDeck ? "Deck Updated!" : "Deck Created!", description: `Deck "${deckData.name}" has been successfully ${editingDeck ? 'updated' : 'created'}.` });
@@ -85,13 +87,11 @@ export default function HomePage() {
   };
 
   const handleEditDeck = (deck: Deck) => {
-    if (!user) return;
     setEditingDeck(deck);
     setIsDeckFormOpen(true);
   };
 
   const handleDeleteDeck = (deckId: string) => {
-    if (!user) return;
     const deckToDelete = store.getDeck(deckId);
     store.deleteDeck(deckId);
     refreshDecks();
@@ -99,12 +99,11 @@ export default function HomePage() {
   };
   
   const handleAiDeckGenerated = (newDeck: Deck) => {
-    if (!user) return;
     store.saveDeck(newDeck);
     refreshDecks();
   };
 
-  if (authLoading) {
+  if (isLoadingDecks) { // Changed from authLoading
     return (
       <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -112,58 +111,7 @@ export default function HomePage() {
     );
   }
 
-  // View for unauthenticated users
-  if (!user) {
-    return (
-      <div className="container mx-auto py-12 px-4 flex flex-col items-center text-center min-h-[calc(100vh-8rem)] justify-center">
-        <div className="animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out">
-          <h1 className="text-4xl sm:text-5xl font-extrabold text-primary mb-6 tracking-tight">Welcome to NOTO</h1>
-          <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl">
-            Your personal AI-powered flashcard companion. Create, study, and master new subjects with unparalleled ease.
-          </p>
-          <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow animate-in fade-in zoom-in-95 duration-500 delay-300 ease-out active:scale-95">
-            <Link href="/login">
-              <LogIn className="mr-2 h-5 w-5" /> Get Started / Log In
-            </Link>
-          </Button>
-        </div>
-
-        <div className="mt-16 w-full max-w-4xl animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out delay-200">
-          <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
-            <CardHeader className="animate-in fade-in slide-in-from-top-5 duration-500 delay-300 ease-out">
-              <CardTitle className="text-2xl sm:text-3xl font-semibold text-center text-primary flex items-center justify-center gap-2">
-                <BookOpen className="h-8 w-8" />
-                Why Choose NOTO?
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
-                {features.map((feature, index) => (
-                  <div 
-                    key={index} 
-                    className="flex items-start gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors animate-in fade-in-50 slide-in-from-bottom-5 duration-500 ease-out"
-                    style={{ animationDelay: `${400 + index * 100}ms` }}
-                  >
-                    <feature.icon className="h-8 w-8 text-accent shrink-0 mt-1" />
-                    <div>
-                      <h3 className="text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
-                      <p className="text-sm text-muted-foreground">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-        
-        <p className="mt-12 text-sm text-muted-foreground animate-in fade-in-0 duration-700 ease-out delay-300">
-          © {new Date().getFullYear()} NOTO by beasty powered by turri.ai
-        </p>
-      </div>
-    );
-  }
-
-  // View for authenticated users
+  // Removed the !user block, now directly showing the deck management UI
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
@@ -192,7 +140,7 @@ export default function HomePage() {
               onEdit={handleEditDeck} 
               onDelete={handleDeleteDeck} 
               className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
-              style={{ animationDelay: `${index * 75}ms` }}
+              style={{ animationDelay: `${(index % 6) * 75}ms` }} // Limit stagger for many cards
             />
           ))}
         </div>
@@ -213,7 +161,7 @@ export default function HomePage() {
   );
 }
 
-function LayersIcon(props: React.SVGProps<SVGSVGElement>) {
+function LayersIcon(props: React.SVGProps<SVGSVGElement>) { // This is the local SVG component
   return (
     <svg
       {...props}
@@ -233,4 +181,3 @@ function LayersIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-

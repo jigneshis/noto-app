@@ -1,6 +1,5 @@
 
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -14,6 +13,9 @@ const firebaseConfig = {
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-const auth = getAuth(app);
 
-export { app, auth };
+// Auth has been removed as per request to remove login feature.
+// If other Firebase services (like Firestore, Storage) are added later,
+// they can be initialized here using the 'app' instance.
+
+export { app };
