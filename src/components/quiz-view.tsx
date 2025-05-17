@@ -144,8 +144,8 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     <Card className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center mb-2">
-            <CardTitle className="text-xl text-primary truncate">{currentFlashcard.title}</CardTitle>
-            <span className="text-sm text-muted-foreground">
+            <CardTitle className="text-lg sm:text-xl text-primary truncate">{currentFlashcard.title}</CardTitle>
+            <span className="text-xs sm:text-sm text-muted-foreground">
                 Card {currentCardIndex + 1} of {shuffledFlashcards.length}
             </span>
         </div>
@@ -154,11 +154,11 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
 
       <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center min-h-[200px]">
         <ScrollArea className="w-full max-h-[150px] mb-4 animate-in fade-in duration-300">
-            <p className="text-2xl font-semibold mb-2">{currentFlashcard.front}</p>
+            <p className="text-xl sm:text-2xl font-semibold mb-2">{currentFlashcard.front}</p>
         </ScrollArea>
         {isAnswerVisible && (
           <ScrollArea className="w-full max-h-[150px] p-3 bg-muted/50 rounded-md animate-in fade-in duration-300">
-            <p className="text-xl text-accent whitespace-pre-wrap">{currentFlashcard.back}</p>
+            <p className="text-lg sm:text-xl text-accent whitespace-pre-wrap">{currentFlashcard.back}</p>
           </ScrollArea>
         )}
         {isExplaining && (
@@ -185,7 +185,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
         ) : (
           <>
             {!feedbackGiven ? (
-              <div className="flex justify-around w-full gap-3">
+              <div className="flex flex-col sm:flex-row justify-around w-full gap-3">
                 <Button onClick={() => handleFeedback(false)} variant="destructive" className="flex-1 active:scale-95 transition-transform" size="lg">
                   <ThumbsDown className="mr-2 h-5 w-5" /> Incorrect
                 </Button>
@@ -200,8 +200,8 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
             )}
           </>
         )}
-        <div className="flex w-full justify-between items-center mt-2">
-          <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining || !currentFlashcard} className="active:scale-95 transition-transform">
+        <div className="flex flex-col sm:flex-row w-full sm:justify-between items-center mt-2 gap-2 sm:gap-0">
+          <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
             {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
             Explain this
           </Button>
@@ -211,3 +211,4 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     </Card>
   );
 }
+

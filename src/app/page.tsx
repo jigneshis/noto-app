@@ -117,8 +117,8 @@ export default function HomePage() {
     return (
       <div className="container mx-auto py-12 px-4 flex flex-col items-center text-center min-h-[calc(100vh-8rem)] justify-center">
         <div className="animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out">
-          <h1 className="text-5xl font-extrabold text-primary mb-6 tracking-tight">Welcome to NOTO</h1>
-          <p className="text-xl text-muted-foreground mb-10 max-w-2xl">
+          <h1 className="text-4xl sm:text-5xl font-extrabold text-primary mb-6 tracking-tight">Welcome to NOTO</h1>
+          <p className="text-lg sm:text-xl text-muted-foreground mb-10 max-w-2xl">
             Your personal AI-powered flashcard companion. Create, study, and master new subjects with unparalleled ease.
           </p>
           <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow animate-in fade-in zoom-in-95 duration-500 delay-300 ease-out active:scale-95">
@@ -131,7 +131,7 @@ export default function HomePage() {
         <div className="mt-16 w-full max-w-4xl animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out delay-200">
           <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
             <CardHeader className="animate-in fade-in slide-in-from-top-5 duration-500 delay-300 ease-out">
-              <CardTitle className="text-3xl font-semibold text-center text-primary flex items-center justify-center gap-2">
+              <CardTitle className="text-2xl sm:text-3xl font-semibold text-center text-primary flex items-center justify-center gap-2">
                 <BookOpen className="h-8 w-8" />
                 Why Choose NOTO?
               </CardTitle>
@@ -167,12 +167,12 @@ export default function HomePage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-primary animate-in fade-in slide-in-from-top-5 duration-500 ease-out">My Flashcard Decks</h1>
-        <div className="flex gap-2 flex-wrap justify-center animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">
-          <Button onClick={() => { setEditingDeck(null); setIsDeckFormOpen(true); }} className="active:scale-95 transition-transform">
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary animate-in fade-in slide-in-from-top-5 duration-500 ease-out">My Flashcard Decks</h1>
+        <div className="flex gap-2 flex-wrap justify-center sm:justify-end animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">
+          <Button onClick={() => { setEditingDeck(null); setIsDeckFormOpen(true); }} className="active:scale-95 transition-transform w-full sm:w-auto">
             <PlusCircle className="mr-2 h-5 w-5" /> Create New Deck
           </Button>
-          <Button variant="outline" onClick={() => setIsAiGeneratorOpen(true)} className="active:scale-95 transition-transform">
+          <Button variant="outline" onClick={() => setIsAiGeneratorOpen(true)} className="active:scale-95 transition-transform w-full sm:w-auto">
             <Sparkles className="mr-2 h-5 w-5 text-accent" /> Generate with AI
           </Button>
         </div>

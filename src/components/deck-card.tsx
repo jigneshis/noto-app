@@ -49,18 +49,22 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
           <p>Last updated: {new Date(deck.updatedAt).toLocaleDateString()}</p>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-between gap-2">
-        <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
-          <Button variant="outline" className="flex-1 active:scale-95 transition-transform">
-            <FileText className="mr-2 h-4 w-4" /> View Deck
-          </Button>
-        </Link>
-        <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
-            <Button variant="default" className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground active:scale-95 transition-transform">
-                <Brain className="mr-2 h-4 w-4" /> Quiz
+      <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4">
+        {/* Group 1: View & Quiz Buttons */}
+        <div className="grid grid-cols-1 sm:flex sm:gap-2 w-full sm:w-auto gap-2">
+          <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
+            <Button variant="outline" className="w-full active:scale-95 transition-transform">
+              <FileText className="mr-2 h-4 w-4" /> View Deck
             </Button>
-        </Link>
-        <div className="flex gap-2">
+          </Link>
+          <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
+              <Button variant="default" className="w-full bg-accent hover:bg-accent/90 text-accent-foreground active:scale-95 transition-transform">
+                  <Brain className="mr-2 h-4 w-4" /> Quiz
+              </Button>
+          </Link>
+        </div>
+        {/* Group 2: Action Icons */}
+        <div className="flex gap-1 self-center sm:self-auto">
             <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck" className="active:scale-90 transition-transform">
                 <Edit3 className="h-5 w-5" />
             </Button>

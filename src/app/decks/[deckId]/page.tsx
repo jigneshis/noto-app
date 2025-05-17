@@ -118,7 +118,7 @@ export default function DeckPage() {
       </Button>
 
       <div className="mb-8 p-6 bg-card rounded-lg shadow-sm border">
-        <h1 className="text-3xl font-bold text-primary mb-2 animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">{deck.name}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2 animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">{deck.name}</h1>
         {deck.description && <p className="text-muted-foreground mb-4 animate-in fade-in slide-in-from-top-5 duration-500 delay-200 ease-out">{deck.description}</p>}
          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center animate-in fade-in slide-in-from-bottom-5 duration-500 delay-300 ease-out">
             <Label htmlFor="share-link" className="text-sm font-medium shrink-0">Share this deck:</Label>
@@ -133,14 +133,14 @@ export default function DeckPage() {
       </div>
       
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-400 ease-out">
-        <h2 className="text-2xl font-semibold">Flashcards ({deck.flashcards.length})</h2>
-        <div className="flex gap-2">
-            <Button onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }} className="active:scale-95 transition-transform">
+        <h2 className="text-xl sm:text-2xl font-semibold">Flashcards ({deck.flashcards.length})</h2>
+        <div className="flex gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
+            <Button onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }} className="active:scale-95 transition-transform w-full sm:w-auto">
                 <PlusCircle className="mr-2 h-5 w-5" /> Add Flashcard
             </Button>
             {deck.flashcards.length > 0 && (
                 <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
-                    <Button variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground active:scale-95 transition-transform">
+                    <Button variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground active:scale-95 transition-transform w-full sm:w-auto">
                         <Brain className="mr-2 h-5 w-5" /> Start Quiz
                     </Button>
                 </Link>
