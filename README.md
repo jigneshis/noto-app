@@ -1,4 +1,3 @@
-
 # NOTO by beasty powered by turri.ai
 
 Welcome to NOTO, your personal AI-powered flashcard companion! This application helps you create, organize, study, and master new subjects with unparalleled ease.
