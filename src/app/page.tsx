@@ -1,3 +1,115 @@
-export default function Home() {
-  return <></>;
+'use client';
+
+import { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { DeckCard } from '@/components/deck-card';
+import { DeckForm } from '@/components/deck-form';
+import { AiFlashcardGeneratorDialog } from '@/components/ai-flashcard-generator-dialog';
+import type { Deck } from '@/lib/types';
+import * as store from '@/lib/localStorageStore';
+import { PlusCircle, Sparkles } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+
+export default function HomePage() {
+  const [decks, setDecks] = useState<Deck[]>([]);
+  const [isDeckFormOpen, setIsDeckFormOpen] = useState(false);
+  const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
+  const [editingDeck, setEditingDeck] = useState<Deck | null>(null);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    store.generateSampleData(); // Add sample data if none exists
+    setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  }, []);
+
+  const refreshDecks = () => {
+    setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+  };
+
+  const handleDeckSubmit = (deckData: Omit<Deck, 'flashcards' | 'createdAt' | 'updatedAt'> | Deck) => {
+    store.saveDeck(deckData as Deck); // Type assertion as store.saveDeck expects full Deck for creation
+    refreshDecks();
+    toast({ title: editingDeck ? "Deck Updated!" : "Deck Created!", description: `Deck "${deckData.name}" has been successfully ${editingDeck ? 'updated' : 'created'}.` });
+    setEditingDeck(null);
+  };
+
+  const handleEditDeck = (deck: Deck) => {
+    setEditingDeck(deck);
+    setIsDeckFormOpen(true);
+  };
+
+  const handleDeleteDeck = (deckId: string) => {
+    const deckToDelete = store.getDeck(deckId);
+    store.deleteDeck(deckId);
+    refreshDecks();
+    toast({ title: "Deck Deleted", description: `Deck "${deckToDelete?.name}" has been deleted.`, variant: 'destructive' });
+  };
+  
+  const handleAiDeckGenerated = (newDeck: Deck) => {
+    store.saveDeck(newDeck);
+    refreshDecks();
+    // Toast is handled within AiFlashcardGeneratorDialog
+  };
+
+  return (
+    <div className="container mx-auto py-8 px-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+        <h1 className="text-3xl font-bold text-primary">My Flashcard Decks</h1>
+        <div className="flex gap-2 flex-wrap justify-center">
+          <Button onClick={() => { setEditingDeck(null); setIsDeckFormOpen(true); }}>
+            <PlusCircle className="mr-2 h-5 w-5" /> Create New Deck
+          </Button>
+          <Button variant="outline" onClick={() => setIsAiGeneratorOpen(true)}>
+            <Sparkles className="mr-2 h-5 w-5 text-accent" /> Generate with AI
+          </Button>
+        </div>
+      </div>
+
+      {decks.length === 0 ? (
+        <div className="text-center py-10">
+          <p className="text-xl text-muted-foreground mb-4">No decks yet. Create your first one!</p>
+          <LayersIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {decks.map((deck) => (
+            <DeckCard key={deck.id} deck={deck} onEdit={handleEditDeck} onDelete={handleDeleteDeck} />
+          ))}
+        </div>
+      )}
+
+      <DeckForm
+        isOpen={isDeckFormOpen}
+        onClose={() => setIsDeckFormOpen(false)}
+        onSubmit={handleDeckSubmit}
+        initialData={editingDeck}
+      />
+      <AiFlashcardGeneratorDialog
+        isOpen={isAiGeneratorOpen}
+        onClose={() => setIsAiGeneratorOpen(false)}
+        onDeckGenerated={handleAiDeckGenerated}
+      />
+    </div>
+  );
+}
+
+function LayersIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <polygon points="12 2 2 7 12 12 22 7 12 2" />
+      <polyline points="2 17 12 22 22 17" />
+      <polyline points="2 12 12 17 22 12" />
+    </svg>
+  )
 }

@@ -1,0 +1,16 @@
+
+export interface Flashcard {
+  id: string;
+  title: string;
+  front: string; // Question
+  back: string;  // Answer
+}
+
+export interface Deck {
+  id:string;
+  name: string;
+  description?: string;
+  flashcards: Flashcard[];
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+}
