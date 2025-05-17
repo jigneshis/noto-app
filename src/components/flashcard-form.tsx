@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,6 +77,7 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 rows={3}
                 required
               />
+              <p className="text-xs text-muted-foreground mt-1">Markdown supported (e.g., **bold**, *italic*, - list).</p>
             </div>
             <div>
               <Label htmlFor="flashcard-back">Back (Answer)</Label>
@@ -87,6 +89,7 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 rows={3}
                 required
               />
+              <p className="text-xs text-muted-foreground mt-1">Markdown supported (e.g., **bold**, *italic*, - list).</p>
             </div>
           </div>
           <DialogFooter>

@@ -21,6 +21,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface FlashcardCardProps {
   flashcard: Flashcard;
@@ -38,15 +40,12 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
-    // setExplanation(null); // Clear explanation when flipping if it's tied to a specific side, or keep if generic
   };
 
   const handleExplain = async () => {
     setIsExplaining(true);
     setExplanation(null);
     try {
-      // Explain based on the *logical* front or back, not visual.
-      // For this example, let's always explain the 'front' if not flipped, 'back' if flipped.
       const contentToExplain = isFlipped ? flashcard.back : flashcard.front;
       const result = await explainContentSimplyAction(contentToExplain);
       setExplanation(result);
@@ -69,10 +68,9 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
       )}
       style={style}
     >
-      {/* Flipping Part - Header and Content */}
       <div
-        className="flex-grow [perspective:1000px] cursor-pointer p-4" // Added padding for inner card appearance
-        onClick={handleFlip} // Make the flipping area clickable
+        className="flex-grow [perspective:1000px] cursor-pointer p-4"
+        onClick={handleFlip}
       >
         <div
           className={cn(
@@ -88,7 +86,9 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Question:</p>
-                <p className="text-md whitespace-pre-wrap">{flashcard.front}</p>
+                <div className="text-md prose dark:prose-invert prose-sm max-w-none"> {/* Added prose classes for markdown styling */}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.front}</ReactMarkdown>
+                </div>
               </ScrollArea>
             </CardContent>
           </div>
@@ -101,14 +101,15 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Answer:</p>
-                <p className="text-md whitespace-pre-wrap">{flashcard.back}</p>
+                 <div className="text-md prose dark:prose-invert prose-sm max-w-none"> {/* Added prose classes for markdown styling */}
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.back}</ReactMarkdown>
+                </div>
               </ScrollArea>
             </CardContent>
           </div>
         </div>
       </div>
 
-      {/* Explanation Section - Stays below flipping part */}
       {isExplaining && (
         <div className="pt-2 px-6 text-center animate-in fade-in duration-300">
           <Loader2 className="h-6 w-6 animate-spin text-accent mx-auto" />
@@ -119,12 +120,13 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
         <ScrollArea className="px-6 pt-2 max-h-[100px] w-full animate-in fade-in duration-300">
           <div className="p-3 bg-muted/50 rounded-md text-sm border-l-2 border-accent pl-2">
             <p className="font-semibold text-accent flex items-center gap-1"><Lightbulb size={16}/> Simplified:</p>
-            <p className="whitespace-pre-wrap">{explanation}</p>
+            <div className="prose dark:prose-invert prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{explanation}</ReactMarkdown>
+            </div>
           </div>
         </ScrollArea>
       )}
 
-      {/* Footer with buttons - Stays at the bottom, outside flipping part */}
       <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t mt-auto px-6 pb-6">
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleFlip(); }} className="active:scale-95 transition-transform">
@@ -145,7 +147,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
                   <Trash2 className="h-5 w-5" />
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent onClick={(e) => e.stopPropagation()}> {/* Stop propagation for dialog itself */}
+            <AlertDialogContent onClick={(e) => e.stopPropagation()}>
               <AlertDialogHeader>
                 <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                 <AlertDialogDescription>

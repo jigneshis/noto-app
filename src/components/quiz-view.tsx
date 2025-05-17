@@ -11,6 +11,8 @@ import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface QuizViewProps {
   deck: Deck;
@@ -18,7 +20,6 @@ interface QuizViewProps {
   className?: string;
 }
 
-// Fisher-Yates shuffle algorithm
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
   for (let i = newArray.length - 1; i > 0; i--) {
@@ -35,7 +36,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const [isAnswerVisible, setIsAnswerVisible] = useState(false);
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
-  const [feedbackGiven, setFeedbackGiven] = useState(false); // Track if feedback (correct/incorrect) has been given for the current card
+  const [feedbackGiven, setFeedbackGiven] = useState(false);
 
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
@@ -69,15 +70,14 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     if (isCorrect) {
       setScore(prevScore => prevScore + 1);
     }
-    setFeedbackGiven(true); // Mark feedback as given
-    // moveToNextCard(); // No longer auto-move, wait for "Next Card" click
+    setFeedbackGiven(true);
   };
   
   const moveToNextCard = () => {
     if (currentCardIndex < shuffledFlashcards.length - 1) {
       setCurrentCardIndex(prevIndex => prevIndex + 1);
       setIsAnswerVisible(false);
-      setFeedbackGiven(false); // Reset feedback status for the new card
+      setFeedbackGiven(false);
       setExplanation(null);
     } else {
       setQuizFinished(true);
@@ -154,11 +154,15 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
 
       <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center min-h-[200px]">
         <ScrollArea className="w-full max-h-[150px] mb-4 animate-in fade-in duration-300">
-            <p className="text-xl sm:text-2xl font-semibold mb-2">{currentFlashcard.front}</p>
+            <div className="text-xl sm:text-2xl font-semibold mb-2 prose dark:prose-invert max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.front}</ReactMarkdown>
+            </div>
         </ScrollArea>
         {isAnswerVisible && (
           <ScrollArea className="w-full max-h-[150px] p-3 bg-muted/50 rounded-md animate-in fade-in duration-300">
-            <p className="text-lg sm:text-xl text-accent whitespace-pre-wrap">{currentFlashcard.back}</p>
+            <div className="text-lg sm:text-xl text-accent prose dark:prose-invert max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.back}</ReactMarkdown>
+            </div>
           </ScrollArea>
         )}
         {isExplaining && (
@@ -171,7 +175,9 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
           <ScrollArea className="mt-4 p-3 bg-secondary/30 rounded-md max-h-[100px] w-full animate-in fade-in duration-300">
             <div className="text-sm border-l-2 border-accent pl-2 text-left">
               <p className="font-semibold text-accent flex items-center gap-1"><Lightbulb size={16}/> Simplified:</p>
-              <p className="whitespace-pre-wrap">{explanation}</p>
+              <div className="prose dark:prose-invert prose-sm max-w-none">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{explanation}</ReactMarkdown>
+              </div>
             </div>
           </ScrollArea>
         )}
@@ -211,4 +217,3 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     </Card>
   );
 }
-
