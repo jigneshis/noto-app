@@ -1,23 +1,57 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
+// import Image from 'next/image'; // Removed Image import
 import { Button } from '@/components/ui/button';
 import { DeckCard } from '@/components/deck-card';
 import { DeckForm } from '@/components/deck-form';
 import { AiFlashcardGeneratorDialog } from '@/components/ai-flashcard-generator-dialog';
 import type { Deck } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, Sparkles, Loader2, LogIn, Layers } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2, LogIn, Layers, Brain, Lightbulb, Share2, SunMoon, Zap, BookOpen } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/auth-context';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+
+
+const features = [
+  {
+    icon: Sparkles,
+    title: 'AI-Powered Flashcards',
+    description: 'Generate and summarize flashcards with AI to accelerate your learning.',
+  },
+  {
+    icon: Layers,
+    title: 'Organize Your Learning',
+    description: 'Create custom decks and manage your study materials efficiently.',
+  },
+  {
+    icon: Brain,
+    title: 'Interactive Quizzing',
+    description: 'Test your knowledge with engaging quiz sessions and track your progress.',
+  },
+  {
+    icon: Lightbulb,
+    title: 'Simplified Explanations',
+    description: 'Get complex topics explained clearly by AI, making difficult concepts easy to grasp.',
+  },
+  {
+    icon: Share2,
+    title: 'Shareable Decks',
+    description: 'Easily share your study decks with friends or classmates (coming soon!).',
+  },
+  {
+    icon: Zap,
+    title: 'Efficient Study Sessions',
+    description: 'Focus your study time effectively with personalized learning tools.',
+  },
+];
+
 
 export default function HomePage() {
   const { user, loading: authLoading } = useAuth();
-  // const router = useRouter(); // No longer needed for immediate redirection
   const [decks, setDecks] = useState<Deck[]>([]);
   const [isDeckFormOpen, setIsDeckFormOpen] = useState(false);
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
@@ -26,14 +60,11 @@ export default function HomePage() {
 
   useEffect(() => {
     if (user && !authLoading) {
-      // For now, sample data is global for local storage.
-      // If data were user-specific (e.g. Firestore), this would change.
       if (store.getDecks().length === 0) {
          store.generateSampleData();
       }
       setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     } else if (!user && !authLoading) {
-      // Clear decks if user logs out or is not logged in from the start
       setDecks([]);
     }
   }, [user, authLoading]);
@@ -84,27 +115,43 @@ export default function HomePage() {
   if (!user) {
     return (
       <div className="container mx-auto py-12 px-4 flex flex-col items-center text-center min-h-[calc(100vh-8rem)] justify-center">
-        <h1 className="text-5xl font-extrabold text-primary mb-6 tracking-tight">Welcome to NOTO</h1>
-        <p className="text-xl text-muted-foreground mb-10 max-w-2xl">
-          Your personal AI-powered flashcard companion. Create, study, and master new subjects with ease.
-        </p>
-        <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow">
-          <Link href="/login">
-            <LogIn className="mr-2 h-5 w-5" /> Get Started / Log In
-          </Link>
-        </Button>
-        <div className="mt-16 w-full max-w-3xl">
-          <Image 
-            src="https://placehold.co/800x450.png" 
-            alt="Dynamic flashcards learning illustration" 
-            width={800} 
-            height={450} 
-            className="mx-auto rounded-xl shadow-2xl object-cover"
-            data-ai-hint="education learning"
-            priority 
-          />
+        <div className="animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out">
+          <h1 className="text-5xl font-extrabold text-primary mb-6 tracking-tight">Welcome to NOTO</h1>
+          <p className="text-xl text-muted-foreground mb-10 max-w-2xl">
+            Your personal AI-powered flashcard companion. Create, study, and master new subjects with unparalleled ease.
+          </p>
+          <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow">
+            <Link href="/login">
+              <LogIn className="mr-2 h-5 w-5" /> Get Started / Log In
+            </Link>
+          </Button>
         </div>
-        <p className="mt-12 text-sm text-muted-foreground">
+
+        <div className="mt-16 w-full max-w-4xl animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out delay-200">
+          <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
+            <CardHeader>
+              <CardTitle className="text-3xl font-semibold text-center text-primary flex items-center justify-center gap-2">
+                <BookOpen className="h-8 w-8" />
+                Why Choose NOTO?
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
+                {features.map((feature, index) => (
+                  <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors">
+                    <feature.icon className="h-8 w-8 text-accent shrink-0 mt-1" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
+                      <p className="text-sm text-muted-foreground">{feature.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <p className="mt-12 text-sm text-muted-foreground animate-in fade-in-0 duration-700 ease-out delay-300">
           © {new Date().getFullYear()} NOTO by beasty powered by turri.ai
         </p>
       </div>
@@ -174,3 +221,4 @@ function LayersIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
