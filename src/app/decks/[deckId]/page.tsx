@@ -109,34 +109,38 @@ export default function DeckPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <Button variant="outline" onClick={() => router.push('/')} className="mb-6">
+      <Button 
+        variant="outline" 
+        onClick={() => router.push('/')} 
+        className="mb-6 animate-in fade-in slide-in-from-left-5 duration-500 ease-out active:scale-95 transition-transform"
+      >
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Decks
       </Button>
 
       <div className="mb-8 p-6 bg-card rounded-lg shadow-sm border">
-        <h1 className="text-3xl font-bold text-primary mb-2">{deck.name}</h1>
-        {deck.description && <p className="text-muted-foreground mb-4">{deck.description}</p>}
-         <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center">
+        <h1 className="text-3xl font-bold text-primary mb-2 animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">{deck.name}</h1>
+        {deck.description && <p className="text-muted-foreground mb-4 animate-in fade-in slide-in-from-top-5 duration-500 delay-200 ease-out">{deck.description}</p>}
+         <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center animate-in fade-in slide-in-from-bottom-5 duration-500 delay-300 ease-out">
             <Label htmlFor="share-link" className="text-sm font-medium shrink-0">Share this deck:</Label>
             <div className="flex w-full max-w-md">
               <Input id="share-link" type="text" value={shareableLink} readOnly className="flex-grow rounded-r-none"/>
-              <Button onClick={copyToClipboard} variant="outline" className="rounded-l-none">
-                {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+              <Button onClick={copyToClipboard} variant="outline" className="rounded-l-none active:scale-95 transition-transform">
+                {copied ? <Check className="h-4 w-4 text-green-500 animate-in fade-in zoom-in-50" /> : <Copy className="h-4 w-4" />}
                 <span className="sr-only">Copy link</span>
               </Button>
             </div>
           </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-400 ease-out">
         <h2 className="text-2xl font-semibold">Flashcards ({deck.flashcards.length})</h2>
         <div className="flex gap-2">
-            <Button onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }}>
+            <Button onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }} className="active:scale-95 transition-transform">
                 <PlusCircle className="mr-2 h-5 w-5" /> Add Flashcard
             </Button>
             {deck.flashcards.length > 0 && (
                 <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
-                    <Button variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <Button variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground active:scale-95 transition-transform">
                         <Brain className="mr-2 h-5 w-5" /> Start Quiz
                     </Button>
                 </Link>
@@ -145,18 +149,20 @@ export default function DeckPage() {
       </div>
 
       {deck.flashcards.length === 0 ? (
-        <div className="text-center py-10 bg-card rounded-lg shadow-sm border">
+        <div className="text-center py-10 bg-card rounded-lg shadow-sm border animate-in fade-in zoom-in-95 duration-500 ease-out delay-500">
           <p className="text-xl text-muted-foreground mb-4">This deck is empty. Add some flashcards!</p>
           <EmptyFlashcardIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deck.flashcards.map((flashcard) => (
+          {deck.flashcards.map((flashcard, index) => (
             <FlashcardCard
               key={flashcard.id}
               flashcard={flashcard}
               onEdit={handleEditFlashcard}
               onDelete={handleDeleteFlashcard}
+              className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
+              style={{ animationDelay: `${index * 75}ms` }}
             />
           ))}
         </div>
@@ -196,3 +202,4 @@ function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+

@@ -121,7 +121,7 @@ export default function HomePage() {
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl">
             Your personal AI-powered flashcard companion. Create, study, and master new subjects with unparalleled ease.
           </p>
-          <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow">
+          <Button asChild size="lg" className="shadow-lg hover:shadow-primary/50 transition-shadow animate-in fade-in zoom-in-95 duration-500 delay-300 ease-out active:scale-95">
             <Link href="/login">
               <LogIn className="mr-2 h-5 w-5" /> Get Started / Log In
             </Link>
@@ -130,7 +130,7 @@ export default function HomePage() {
 
         <div className="mt-16 w-full max-w-4xl animate-in fade-in-50 slide-in-from-bottom-10 duration-700 ease-out delay-200">
           <Card className="shadow-xl bg-card/80 backdrop-blur-sm">
-            <CardHeader>
+            <CardHeader className="animate-in fade-in slide-in-from-top-5 duration-500 delay-300 ease-out">
               <CardTitle className="text-3xl font-semibold text-center text-primary flex items-center justify-center gap-2">
                 <BookOpen className="h-8 w-8" />
                 Why Choose NOTO?
@@ -139,7 +139,11 @@ export default function HomePage() {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 text-left">
                 {features.map((feature, index) => (
-                  <div key={index} className="flex items-start gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors">
+                  <div 
+                    key={index} 
+                    className="flex items-start gap-4 p-4 rounded-lg hover:bg-muted/50 transition-colors animate-in fade-in-50 slide-in-from-bottom-5 duration-500 ease-out"
+                    style={{ animationDelay: `${400 + index * 100}ms` }}
+                  >
                     <feature.icon className="h-8 w-8 text-accent shrink-0 mt-1" />
                     <div>
                       <h3 className="text-lg font-semibold text-foreground mb-1">{feature.title}</h3>
@@ -163,26 +167,33 @@ export default function HomePage() {
   return (
     <div className="container mx-auto py-8 px-4">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
-        <h1 className="text-3xl font-bold text-primary">My Flashcard Decks</h1>
-        <div className="flex gap-2 flex-wrap justify-center">
-          <Button onClick={() => { setEditingDeck(null); setIsDeckFormOpen(true); }}>
+        <h1 className="text-3xl font-bold text-primary animate-in fade-in slide-in-from-top-5 duration-500 ease-out">My Flashcard Decks</h1>
+        <div className="flex gap-2 flex-wrap justify-center animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">
+          <Button onClick={() => { setEditingDeck(null); setIsDeckFormOpen(true); }} className="active:scale-95 transition-transform">
             <PlusCircle className="mr-2 h-5 w-5" /> Create New Deck
           </Button>
-          <Button variant="outline" onClick={() => setIsAiGeneratorOpen(true)}>
+          <Button variant="outline" onClick={() => setIsAiGeneratorOpen(true)} className="active:scale-95 transition-transform">
             <Sparkles className="mr-2 h-5 w-5 text-accent" /> Generate with AI
           </Button>
         </div>
       </div>
 
       {decks.length === 0 ? (
-        <div className="text-center py-10 bg-card border rounded-lg shadow-sm">
+        <div className="text-center py-10 bg-card border rounded-lg shadow-sm animate-in fade-in zoom-in-95 duration-500 ease-out delay-200">
           <p className="text-xl text-muted-foreground mb-4">No decks yet. Create your first one or use AI!</p>
           <LayersIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {decks.map((deck) => (
-            <DeckCard key={deck.id} deck={deck} onEdit={handleEditDeck} onDelete={handleDeleteDeck} />
+          {decks.map((deck, index) => (
+            <DeckCard 
+              key={deck.id} 
+              deck={deck} 
+              onEdit={handleEditDeck} 
+              onDelete={handleDeleteDeck} 
+              className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
+              style={{ animationDelay: `${index * 75}ms` }}
+            />
           ))}
         </div>
       )}

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -19,14 +20,17 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { cn } from '@/lib/utils';
 
 interface FlashcardCardProps {
   flashcard: Flashcard;
   onEdit: (flashcard: Flashcard) => void;
   onDelete: (flashcardId: string) => void;
+  className?: string;
+  style?: React.CSSProperties;
 }
 
-export function FlashcardCard({ flashcard, onEdit, onDelete }: FlashcardCardProps) {
+export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }: FlashcardCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
@@ -56,7 +60,13 @@ export function FlashcardCard({ flashcard, onEdit, onDelete }: FlashcardCardProp
   };
 
   return (
-    <Card className="w-full shadow-md hover:shadow-lg transition-shadow duration-300 min-h-[300px] flex flex-col">
+    <Card 
+      className={cn(
+        "w-full shadow-md hover:shadow-2xl hover:scale-105 transition-all duration-300 ease-out min-h-[300px] flex flex-col",
+        className
+      )}
+      style={style}
+    >
       <CardHeader className="pb-2">
         <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
       </CardHeader>
@@ -68,13 +78,13 @@ export function FlashcardCard({ flashcard, onEdit, onDelete }: FlashcardCardProp
           </ScrollArea>
         </div>
         {isExplaining && (
-          <div className="mt-4 text-center">
+          <div className="mt-4 text-center animate-in fade-in duration-300">
             <Loader2 className="h-6 w-6 animate-spin text-accent" />
             <p className="text-sm text-muted-foreground">Getting explanation...</p>
           </div>
         )}
         {explanation && (
-          <ScrollArea className="mt-4 p-3 bg-muted/50 rounded-md max-h-[100px] w-full">
+          <ScrollArea className="mt-4 p-3 bg-muted/50 rounded-md max-h-[100px] w-full animate-in fade-in duration-300">
             <div className="text-sm border-l-2 border-accent pl-2">
               <p className="font-semibold text-accent flex items-center gap-1"><Lightbulb size={16}/> Simplified:</p>
               <p className="whitespace-pre-wrap">{explanation}</p>
@@ -84,21 +94,21 @@ export function FlashcardCard({ flashcard, onEdit, onDelete }: FlashcardCardProp
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t">
         <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={handleFlip}>
+            <Button variant="outline" size="sm" onClick={handleFlip} className="active:scale-95 transition-transform">
                 <RotateCcw className="mr-2 h-4 w-4" /> Flip
             </Button>
-            <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining}>
+            <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining} className="active:scale-95 transition-transform">
                 {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-accent" />}
                 Explain
             </Button>
         </div>
         <div className="flex gap-2">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(flashcard)} aria-label="Edit flashcard">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(flashcard)} aria-label="Edit flashcard" className="active:scale-90 transition-transform">
                 <Edit3 className="h-5 w-5" />
             </Button>
              <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10" aria-label="Delete flashcard">
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 active:scale-90 transition-transform" aria-label="Delete flashcard">
                     <Trash2 className="h-5 w-5" />
                 </Button>
               </AlertDialogTrigger>

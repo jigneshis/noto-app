@@ -58,14 +58,14 @@ export default function QuizPage() {
 
   return (
     <div className="container mx-auto py-8 px-4">
-      <div className="flex justify-between items-center mb-6">
-        <Button variant="outline" onClick={() => router.push(`/decks/${deckId}`)}>
+      <div className="flex justify-between items-center mb-6 animate-in fade-in slide-in-from-top-5 duration-500 ease-out">
+        <Button variant="outline" onClick={() => router.push(`/decks/${deckId}`)} className="active:scale-95 transition-transform">
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Deck
         </Button>
         <h1 className="text-2xl font-bold text-primary">Quiz: {deck.name}</h1>
       </div>
       
-      <QuizView deck={deck} />
+      <QuizView deck={deck} className="animate-in fade-in zoom-in-95 duration-500 delay-200 ease-out" />
     </div>
   );
 }
