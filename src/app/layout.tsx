@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/header';
 import { AuthProvider } from '@/contexts/auth-context';
+import { ThemeProvider } from 'next-themes';
 
 const fontSans = FontSans({
   subsets: ['latin'],
@@ -13,7 +14,7 @@ const fontSans = FontSans({
 });
 
 export const metadata: Metadata = {
-  title: 'Card Weaver - Weave Your Knowledge',
+  title: 'NOTO by beasty powered by turri.ai',
   description: 'Create, organize, and share flashcards with AI-powered features.',
 };
 
@@ -30,13 +31,20 @@ export default function RootLayout({
           fontSans.variable
         )}
       >
-        <AuthProvider>
-          <div className="relative flex min-h-screen flex-col">
-            <Header />
-            <main className="flex-1">{children}</main>
-          </div>
-          <Toaster />
-        </AuthProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <AuthProvider>
+            <div className="relative flex min-h-screen flex-col">
+              <Header />
+              <main className="flex-1">{children}</main>
+            </div>
+            <Toaster />
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
