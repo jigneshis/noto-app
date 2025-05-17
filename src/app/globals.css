@@ -1,10 +1,7 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-body {
-  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
-}
 
 @layer base {
   :root {
@@ -84,10 +81,12 @@ body {
 
 @layer base {
   * {
-    @apply border-border;
+    /* Apply a transition to color-related properties for all elements */
+    @apply border-border transition-colors duration-500 ease-in-out;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground; /* Body text and bg will also use the * transition, but layout.tsx provides a more specific, longer one for the body tag itself */
+    font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 }
