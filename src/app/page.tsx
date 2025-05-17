@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -20,7 +21,7 @@ const features = [
   {
     icon: Sparkles,
     title: 'AI-Powered Flashcards',
-    description: 'Generate and summarize flashcards with AI to accelerate your learning.',
+    description: 'With the help of turri.ai you can analise and help ur idea to come true',
   },
   {
     icon: Layers,
