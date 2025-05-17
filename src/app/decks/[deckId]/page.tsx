@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,15 +9,17 @@ import { FlashcardCard } from '@/components/flashcard-card';
 import { FlashcardForm } from '@/components/flashcard-form';
 import type { Deck, Flashcard } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, ArrowLeft, Brain, Copy, Check } from 'lucide-react';
+import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Lightbulb } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function DeckPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
+  const { user, loading: authLoading } = useAuth();
   
   const [deck, setDeck] = useState<Deck | null>(null);
   const [isFlashcardFormOpen, setIsFlashcardFormOpen] = useState(false);
@@ -26,36 +29,39 @@ export default function DeckPage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    if (deckId) {
+    if (!authLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, authLoading, router]);
+
+  useEffect(() => {
+    if (user && deckId) { // Only proceed if user is logged in and deckId is present
       const currentDeck = store.getDeck(deckId);
       if (currentDeck) {
         setDeck(currentDeck);
-        // For now, the shareable link is just the current page URL.
-        // Username and deck name in URL is more complex and requires auth/profiles.
         if (typeof window !== 'undefined') {
              setShareableLink(`${window.location.origin}/decks/${deckId}`);
         }
       } else {
-        // Handle deck not found, e.g., redirect or show error
         toast({ title: 'Deck not found', variant: 'destructive' });
         router.push('/');
       }
     }
-  }, [deckId, router, toast]);
+  }, [deckId, router, toast, user]);
 
   const refreshDeck = () => {
-    if (deckId) {
+    if (user && deckId) {
       setDeck(store.getDeck(deckId) || null);
     }
   };
 
   const handleFlashcardSubmit = (flashcardData: Omit<Flashcard, 'id'> | Flashcard) => {
-    if (!deck) return;
+    if (!deck || !user) return;
 
-    if ('id' in flashcardData && editingFlashcard) { // Editing existing
+    if ('id' in flashcardData && editingFlashcard) { 
       store.updateFlashcardInDeck(deck.id, flashcardData as Flashcard);
       toast({ title: "Flashcard Updated!", description: `Flashcard "${flashcardData.title}" updated.` });
-    } else { // Creating new
+    } else { 
       store.addFlashcardToDeck(deck.id, flashcardData);
       toast({ title: "Flashcard Created!", description: `Flashcard "${flashcardData.title}" added to deck.` });
     }
@@ -64,12 +70,13 @@ export default function DeckPage() {
   };
 
   const handleEditFlashcard = (flashcard: Flashcard) => {
+    if (!user) return;
     setEditingFlashcard(flashcard);
     setIsFlashcardFormOpen(true);
   };
 
   const handleDeleteFlashcard = (flashcardId: string) => {
-    if (!deck) return;
+    if (!deck || !user) return;
     const fcToDelete = deck.flashcards.find(fc => fc.id === flashcardId);
     store.deleteFlashcardFromDeck(deck.id, flashcardId);
     refreshDeck();
@@ -87,8 +94,17 @@ export default function DeckPage() {
     });
   };
 
+  if (authLoading || !user) {
+    return (
+      <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (!deck) {
-    return <div className="container mx-auto py-8 text-center">Loading deck...</div>;
+    // This state can occur briefly or if deck load fails after auth
+    return <div className="container mx-auto py-8 text-center">Loading deck details...</div>;
   }
 
   return (
@@ -131,7 +147,7 @@ export default function DeckPage() {
       {deck.flashcards.length === 0 ? (
         <div className="text-center py-10 bg-card rounded-lg shadow-sm border">
           <p className="text-xl text-muted-foreground mb-4">This deck is empty. Add some flashcards!</p>
-          <LightbulbIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
+          <EmptyFlashcardIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -156,7 +172,8 @@ export default function DeckPage() {
   );
 }
 
-function LightbulbIcon(props: React.SVGProps<SVGSVGElement>) {
+// Renamed LightbulbIcon to EmptyFlashcardIcon to be more specific
+function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
       {...props}
@@ -170,9 +187,12 @@ function LightbulbIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      <path d="M15 14c.2-1 .7-1.7 1.5-2.5C17.7 10.2 18 9 18 7c0-2.2-1.8-4-4-4S10 4.8 10 7c0 2 .3 3.2 1.5 4.5.8.8 1.3 1.5 1.5 2.5" />
-      <path d="M9 18h6" />
-      <path d="M10 22h4" />
+      {/* Simple stack of cards icon */}
+      <rect x="2" y="7" width="18" height="12" rx="2" ry="2" />
+      <path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" />
+      <path d="M6 7V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4" />
+      <line x1="12" y1="11" x2="12" y2="15" />
+      <line x1="10" y1="13" x2="14" y2="13" />
     </svg>
   )
 }

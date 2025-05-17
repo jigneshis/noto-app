@@ -1,16 +1,21 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { DeckCard } from '@/components/deck-card';
 import { DeckForm } from '@/components/deck-form';
 import { AiFlashcardGeneratorDialog } from '@/components/ai-flashcard-generator-dialog';
 import type { Deck } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, Sparkles } from 'lucide-react';
+import { PlusCircle, Sparkles, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [decks, setDecks] = useState<Deck[]>([]);
   const [isDeckFormOpen, setIsDeckFormOpen] = useState(false);
   const [isAiGeneratorOpen, setIsAiGeneratorOpen] = useState(false);
@@ -18,27 +23,41 @@ export default function HomePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    store.generateSampleData(); // Add sample data if none exists
-    setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-  }, []);
+    if (!authLoading && !user) {
+      router.push('/login');
+    } else if (user) {
+      // Ensure sample data is generated only once and after login, if needed.
+      // This check might need adjustment based on whether sample data should be user-specific
+      // or global. For now, it's global but tied to a logged-in user viewing the page.
+      if (store.getDecks().length === 0) { // Simplified check, may need refinement
+         store.generateSampleData();
+      }
+      setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }
+  }, [user, authLoading, router]);
 
   const refreshDecks = () => {
-    setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    if (user) { // Only refresh if user is logged in
+      setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }
   };
 
   const handleDeckSubmit = (deckData: Omit<Deck, 'flashcards' | 'createdAt' | 'updatedAt'> | Deck) => {
-    store.saveDeck(deckData as Deck); // Type assertion as store.saveDeck expects full Deck for creation
+    if (!user) return; // Should not happen if UI is disabled for non-users
+    store.saveDeck(deckData as Deck); 
     refreshDecks();
     toast({ title: editingDeck ? "Deck Updated!" : "Deck Created!", description: `Deck "${deckData.name}" has been successfully ${editingDeck ? 'updated' : 'created'}.` });
     setEditingDeck(null);
   };
 
   const handleEditDeck = (deck: Deck) => {
+    if (!user) return;
     setEditingDeck(deck);
     setIsDeckFormOpen(true);
   };
 
   const handleDeleteDeck = (deckId: string) => {
+    if (!user) return;
     const deckToDelete = store.getDeck(deckId);
     store.deleteDeck(deckId);
     refreshDecks();
@@ -46,10 +65,18 @@ export default function HomePage() {
   };
   
   const handleAiDeckGenerated = (newDeck: Deck) => {
+    if (!user) return;
     store.saveDeck(newDeck);
     refreshDecks();
-    // Toast is handled within AiFlashcardGeneratorDialog
   };
+
+  if (authLoading || !user) {
+    return (
+      <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -66,8 +93,8 @@ export default function HomePage() {
       </div>
 
       {decks.length === 0 ? (
-        <div className="text-center py-10">
-          <p className="text-xl text-muted-foreground mb-4">No decks yet. Create your first one!</p>
+        <div className="text-center py-10 bg-card border rounded-lg shadow-sm">
+          <p className="text-xl text-muted-foreground mb-4">No decks yet. Create your first one or use AI!</p>
           <LayersIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
         </div>
       ) : (

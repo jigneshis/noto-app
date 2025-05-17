@@ -1,10 +1,9 @@
 
 'use client';
 
-import { useState, FormEvent } from 'react';
+import { useState, FormEvent, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import {
-  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   GoogleAuthProvider,
@@ -17,20 +16,28 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
-import { GoogleIcon } from '@/components/icons'; // Assuming you have a Google icon
-import { Loader2 } from 'lucide-react';
+import { GoogleIcon } from '@/components/icons'; 
+import { Loader2, X } from 'lucide-react';
+import { useAuth } from '@/contexts/auth-context';
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push('/'); // Redirect to home if already logged in
+    }
+  }, [user, authLoading, router]);
+
   const handleAuthSuccess = () => {
     toast({ title: 'Success!', description: 'You are now logged in.' });
-    router.push('/'); // Redirect to home or dashboard
+    router.push('/'); 
   };
 
   const handleAuthError = (error: any, action: string) => {
@@ -50,7 +57,9 @@ export default function LoginPage() {
           break;
         case 'auth/popup-closed-by-user':
           errorMessage = 'Google Sign-In cancelled.';
-          return; // Don't show toast for this specific case
+          // Don't show toast for this specific case, but still log it.
+          console.log(errorMessage);
+          return; 
         default:
           errorMessage = error.message;
       }
@@ -96,13 +105,27 @@ export default function LoginPage() {
       setIsGoogleLoading(false);
     }
   };
+  
+  if (authLoading || user) {
+    // Show loading or redirect handled by useEffect
+    return <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+  }
 
   return (
     <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center py-12 px-4">
-      <Card className="w-full max-w-md shadow-xl">
+      <Card className="w-full max-w-md shadow-xl relative">
+        <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 text-muted-foreground hover:text-foreground z-10"
+            onClick={() => router.push('/')}
+            aria-label="Close"
+        >
+            <X className="h-5 w-5" />
+        </Button>
         <Tabs defaultValue="signin" className="w-full">
-          <CardHeader className="text-center">
-            <CardTitle className="text-2xl">Welcome to Card Weaver</CardTitle>
+          <CardHeader className="text-center pt-8"> {/* Added padding top to avoid overlap with X button */}
+            <CardTitle className="text-2xl">Welcome to NOTO</CardTitle>
             <CardDescription>Sign in or create an account to continue</CardDescription>
             <TabsList className="grid w-full grid-cols-2 mt-4">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
