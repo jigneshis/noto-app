@@ -5,18 +5,57 @@ export function Logo(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 24 24"
+      viewBox="0 0 84 97" // Width 84, Height 97
       fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      aria-labelledby="notoLogoTitle notoLogoDesc"
+      role="img"
       {...props}
     >
-      <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-      <polyline points="14 2 14 8 20 8" />
-      <path d="M12 18v-6" />
-      <path d="M9 15h6" />
+      <title id="notoLogoTitle">NOTO Logo</title>
+      <desc id="notoLogoDesc">The logo consists of a light blue rounded square with a dark 'N' inside, a yellow lightbulb at the top-right, and the word 'Noto' underneath.</desc>
+      {/* Main square */}
+      <rect x="7" y="1.5" width="64" height="64" rx="10" fill="#DCEEFB" />
+      {/* Letter N */}
+      <text
+        x="39"
+        y="47" // Adjusted for better vertical centering
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="40"
+        fontWeight="bold"
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="#231F20"
+      >
+        N
+      </text>
+      {/* Lightbulb group - positioned relative to SVG top-left */}
+      <g transform="translate(48 -2)"> {/* Overall adjustment for lightbulb position */}
+        {/* Rays */}
+        <line x1="16.5" y1="3.5" x2="16.5" y2="0" stroke="#FCE081" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="23.0941" y1="6.90588" x2="25.5689" y2="4.43111" stroke="#FCE081" strokeWidth="2.5" strokeLinecap="round" />
+        <line x1="9.90588" y1="6.90588" x2="7.43111" y2="4.43111" stroke="#FCE081" strokeWidth="2.5" strokeLinecap="round" />
+        {/* Bulb */}
+        <circle cx="16.5" cy="14.5" r="6.5" fill="#FCE081" />
+        {/* Filament */}
+        <g stroke="#F2A80F" strokeWidth="1.2" strokeLinecap="round">
+          <line x1="14.5" y1="12.5" x2="18.5" y2="16.5" />
+          <line x1="18.5" y1="12.5" x2="14.5" y2="16.5" />
+        </g>
+        {/* Base of lightbulb */}
+        <rect x="13" y="20" width="7" height="3" rx="1" fill="#E0E0E0" /> {/* Slightly rounded base */}
+      </g>
+      {/* Text "Noto" */}
+      <text
+        x="40"
+        y="86" 
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="22"
+        fontWeight="bold"
+        textAnchor="middle"
+        fill="#231F20"
+      >
+        Noto
+      </text>
     </svg>
   );
 }

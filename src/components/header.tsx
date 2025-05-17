@@ -17,13 +17,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center">
-        <Link href="/" className="mr-6 flex items-start space-x-2">
-          <Logo className="h-8 w-8 text-primary mt-1 flex-shrink-0" />
-          <div>
-            <span className="font-bold text-xl sm:text-2xl text-primary"> {/* Adjusted text size for NOTO */}
-              NOTO
-            </span>
-            <p className="text-[0.6rem] sm:text-xs text-muted-foreground leading-tight hidden sm:block"> {/* Smaller tagline */}
+        <Link href="/" className="mr-6 flex items-center space-x-2">
+          <Logo className="h-10 w-auto flex-shrink-0" /> {/* Adjusted size, colors are fixed in SVG */}
+          {/* The "NOTO" text is now part of the Logo SVG */}
+          <div className="flex flex-col justify-center"> {/* Div to help align tagline */}
+            <p className="text-[0.6rem] sm:text-xs text-muted-foreground leading-tight hidden sm:block">
               by beasty powered by turri.ai
             </p>
           </div>
