@@ -27,7 +27,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body
         className={cn(
-          'min-h-screen bg-background font-sans antialiased transition-colors duration-500 ease-in-out',
+          'min-h-screen bg-background font-sans antialiased transition-colors duration-700 ease-in-out',
           fontSans.variable
         )}
       >
@@ -35,7 +35,7 @@ export default function RootLayout({
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
+          disableTransitionOnChange 
         >
           <AuthProvider>
             <div className="relative flex min-h-screen flex-col">
