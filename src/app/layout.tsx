@@ -5,12 +5,11 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/header';
-// import { AuthProvider } from '@/contexts/auth-context'; // Removed
 import { ThemeProvider } from 'next-themes';
 
 const fontSans = FontSans({
   subsets: ['latin'],
-  variable: '--font-geist-sans', // Using Geist variable name for consistency with scaffold
+  variable: '--font-geist-sans', 
 });
 
 export const metadata: Metadata = {
@@ -37,13 +36,11 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange 
         >
-          {/* <AuthProvider> Removed AuthProvider */}
             <div className="relative flex min-h-screen flex-col">
               <Header />
               <main className="flex-1">{children}</main>
             </div>
             <Toaster />
-          {/* </AuthProvider> Removed AuthProvider */}
         </ThemeProvider>
       </body>
     </html>

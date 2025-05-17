@@ -1,21 +1,16 @@
+// Firebase has been removed from this project.
+// This file is kept to prevent import errors from other template files
+// but does not initialize or export any Firebase services.
 
-import { initializeApp, getApps, getApp } from 'firebase/app';
+// If you were previously using Firebase services like Firestore or Storage,
+// you would need to set up an alternative or re-integrate Firebase.
 
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  // measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional
-};
+// For example, to use Supabase (which has been added as a dependency):
+// import { createClient } from '@supabase/supabase-js';
+// const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+// const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+// export const supabase = supabaseUrl && supabaseAnonKey ? createClient(supabaseUrl, supabaseAnonKey) : null;
 
-// Initialize Firebase
-const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
-
-// Auth has been removed as per request to remove login feature.
-// If other Firebase services (like Firestore, Storage) are added later,
-// they can be initialized here using the 'app' instance.
-
-export { app };
+// Placeholder export to avoid breaking imports if 'app' was used,
+// though it's not a Firebase app instance anymore.
+export const app = {};
