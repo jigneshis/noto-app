@@ -33,6 +33,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsLoadingDecks(true);
+    // Removed sample data generation
     setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setIsLoadingDecks(false);
   }, []);
@@ -142,7 +143,7 @@ export default function HomePage() {
           </div>
         </div>
         
-        <div className="mb-4 p-4 bg-card border rounded-lg shadow-sm animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
+        <div className="mb-8 p-4 bg-card border rounded-lg shadow-sm animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
           <div className="flex items-center gap-2 mb-4">
             <Search className="h-5 w-5 text-muted-foreground" />
             <Input
@@ -200,16 +201,16 @@ export default function HomePage() {
             <LayersIconLucide className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
             {filteredDecks.map((deck, index) => (
               <DeckCard
                 key={deck.id}
                 deck={deck}
                 onEdit={handleEditDeck}
                 onDelete={handleDeleteDeck}
-                onDuplicate={handleDuplicateDeck} // Pass the new handler
+                onDuplicate={handleDuplicateDeck} 
                 className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
-                style={{ animationDelay: `${(index % 6) * 75}ms` }}
+                style={{ animationDelay: `${(index % 4) * 75}ms` }}
               />
             ))}
           </div>
