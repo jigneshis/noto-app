@@ -40,25 +40,30 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
   const masteryPercentage = totalCards > 0 ? Math.round((masteredCards / totalCards) * 100) : 0;
 
   return (
-    <Card 
+    <Card
       className={cn(
-        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[420px]", // Increased min-height
+        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[420px]",
         className
       )}
       style={{ ...style, borderTop: deckAccentColor ? `3px solid ${deckAccentColor}` : undefined }}
     >
-      <CardHeader>
-        <CardTitle 
-          className="flex items-center gap-2 text-primary" 
-          style={deckAccentColor ? { color: deckAccentColor } : {}}
-        >
-          <Layers 
-            className="h-6 w-6" 
+      <CardHeader className="flex flex-row justify-between items-start">
+        <div>
+          <CardTitle
+            className="flex items-center gap-2 text-primary"
             style={deckAccentColor ? { color: deckAccentColor } : {}}
-          />
-          {deck.name}
-        </CardTitle>
-        {deck.description && <CardDescription className="line-clamp-2">{deck.description}</CardDescription>}
+          >
+            <Layers
+              className="h-6 w-6"
+              style={deckAccentColor ? { color: deckAccentColor } : {}}
+            />
+            {deck.name}
+          </CardTitle>
+          {deck.description && <CardDescription className="line-clamp-2 mt-1">{deck.description}</CardDescription>}
+        </div>
+        <Button variant="ghost" size="icon" onClick={() => onDuplicate(deck.id)} aria-label="Duplicate deck" className="ml-auto shrink-0">
+            <Copy className="h-5 w-5" />
+        </Button>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="text-sm text-muted-foreground">
@@ -89,9 +94,9 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
       <CardFooter className="flex flex-col sm:flex-row sm:justify-between items-center gap-3 pt-4 border-t mt-auto">
         <div className="grid grid-cols-1 sm:flex sm:gap-2 w-full sm:w-auto gap-2">
           <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
-            <Button 
-              variant="outline" 
-              className="w-full" 
+            <Button
+              variant="outline"
+              className="w-full"
               onClick={() => setActiveAction('view')}
               disabled={activeAction === 'view'}
             >
@@ -104,8 +109,8 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
             </Button>
           </Link>
           <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
-              <Button 
-                variant="default" 
+              <Button
+                variant="default"
                 className="w-full text-accent-foreground"
                 style={deckAccentColor ? { backgroundColor: deckAccentColor } : {}}
                 onClick={() => setActiveAction('quiz')}
@@ -121,9 +126,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
           </Link>
         </div>
         <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => onDuplicate(deck.id)} aria-label="Duplicate deck">
-                <Copy className="h-5 w-5" />
-            </Button>
+            {/* Duplicate button removed from here */}
             <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
                 <Edit3 className="h-5 w-5" />
             </Button>
