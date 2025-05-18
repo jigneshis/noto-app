@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
-import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Volume2 } from 'lucide-react';
+import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Volume2, Download } from 'lucide-react';
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent } from "@/components/ui/dialog"; // Added Dialog
+import { Dialog, DialogContent, DialogFooter as ModalFooter } from "@/components/ui/dialog"; // Renamed DialogFooter to avoid conflict
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -110,6 +110,17 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
     e.stopPropagation(); // Prevent card flip
     setLargeImageSrc(imageUrl);
     setIsImageModalOpen(true);
+  };
+  
+  const handleDownloadImage = () => {
+    if (!largeImageSrc) return;
+    const link = document.createElement('a');
+    link.href = largeImageSrc;
+    link.download = 'flashcard_image.png'; // You can make the filename more dynamic if needed
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast({ title: 'Image Download Started!' });
   };
 
   const currentStatus = flashcard.status || 'learning';
@@ -264,10 +275,15 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
         </CardFooter>
       </Card>
 
-      {largeImageSrc && (
+      {isImageModalOpen && largeImageSrc && (
         <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
-          <DialogContent className="max-w-3xl max-h-[90vh] p-2 sm:p-4">
-            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[85vh] object-contain mx-auto rounded-md" />
+          <DialogContent className="max-w-3xl max-h-[90vh] p-2 sm:p-4 flex flex-col">
+            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[calc(85vh-4rem)] object-contain mx-auto rounded-md" />
+            <ModalFooter className="pt-4 justify-center">
+              <Button onClick={handleDownloadImage} variant="outline" size="sm">
+                <Download className="mr-2 h-4 w-4" /> Download Image
+              </Button>
+            </ModalFooter>
           </DialogContent>
         </Dialog>
       )}
