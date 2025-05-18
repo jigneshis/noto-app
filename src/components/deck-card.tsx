@@ -42,7 +42,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
   return (
     <Card 
       className={cn(
-        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[380px]", 
+        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[400px]", 
         className
       )}
       style={{ ...style, borderTop: deckAccentColor ? `3px solid ${deckAccentColor}` : undefined }}
@@ -91,7 +91,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
           <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
             <Button 
               variant="outline" 
-              className="w-full active:scale-95 transition-transform" 
+              className="w-full" 
               onClick={() => setActiveAction('view')}
               disabled={activeAction === 'view'}
             >
@@ -106,7 +106,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
           <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
               <Button 
                 variant="default" 
-                className="w-full text-accent-foreground active:scale-95 transition-transform"
+                className="w-full text-accent-foreground"
                 style={deckAccentColor ? { backgroundColor: deckAccentColor } : {}}
                 onClick={() => setActiveAction('quiz')}
                 disabled={activeAction === 'quiz' || deck.flashcards.length === 0}
@@ -121,15 +121,15 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
           </Link>
         </div>
         <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" onClick={() => onDuplicate(deck.id)} aria-label="Duplicate deck" className="active:scale-95 transition-transform">
+            <Button variant="ghost" size="icon" onClick={() => onDuplicate(deck.id)} aria-label="Duplicate deck">
                 <Copy className="h-5 w-5" />
             </Button>
-            <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck" className="active:scale-95 transition-transform">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
                 <Edit3 className="h-5 w-5" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 active:scale-95 transition-transform" aria-label="Delete deck">
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10" aria-label="Delete deck">
                     <Trash2 className="h-5 w-5" />
                 </Button>
               </AlertDialogTrigger>
@@ -144,7 +144,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => onDelete(deck.id)}
-                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground active:scale-95 transition-transform"
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
                   >
                     Delete
                   </AlertDialogAction>
