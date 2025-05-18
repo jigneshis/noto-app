@@ -9,13 +9,15 @@ export function getDecks(): Deck[] {
   if (typeof window === 'undefined') return [];
   const storedDecks = localStorage.getItem(DECKS_STORAGE_KEY);
   const decks = storedDecks ? JSON.parse(storedDecks) : [];
-  // Ensure all flashcards have a status, default to 'learning'
+  // Ensure all decks have necessary fields with defaults
   return decks.map((deck: Deck) => ({
     ...deck,
-    flashcards: deck.flashcards.map(fc => ({
+    flashcards: (deck.flashcards || []).map(fc => ({
       ...fc,
       status: fc.status || 'learning' 
-    }))
+    })),
+    tags: deck.tags || [], // Ensure tags array exists
+    accentColor: deck.accentColor || undefined,
   }));
 }
 
@@ -25,10 +27,12 @@ export function getDeck(id: string): Deck | undefined {
   if (deck) {
     return {
       ...deck,
-      flashcards: deck.flashcards.map(fc => ({
+      flashcards: (deck.flashcards || []).map(fc => ({
         ...fc,
         status: fc.status || 'learning'
-      }))
+      })),
+      tags: deck.tags || [],
+      accentColor: deck.accentColor || undefined,
     };
   }
   return undefined;
@@ -43,17 +47,16 @@ export function saveDeck(deckToSave: Deck): Deck {
       ...deckToSave,
       updatedAt: now,
       createdAt: existingDeckIndex > -1 ? decks[existingDeckIndex].createdAt : now,
-      // Ensure flashcards array exists and new flashcards get a default status
       flashcards: (deckToSave.flashcards || []).map(fc => ({
         ...fc,
-        id: fc.id || crypto.randomUUID(), // Ensure ID for new cards if not present
+        id: fc.id || crypto.randomUUID(),
         status: fc.status || 'learning'
       })),
+      tags: deckToSave.tags || [], // Ensure tags are saved
       accentColor: deckToSave.accentColor || undefined, 
   };
 
   if (existingDeckIndex > -1) {
-    // Preserve original flashcards if not explicitly provided, but merge status
     const originalFlashcards = decks[existingDeckIndex].flashcards;
     completeDeckData.flashcards = deckToSave.flashcards.length > 0 
       ? deckToSave.flashcards.map(fc => ({...fc, status: fc.status || 'learning'})) 
@@ -82,7 +85,7 @@ export function addFlashcardToDeck(deckId: string, flashcard: Omit<Flashcard, 'i
   const newFlashcard: Flashcard = {
     ...flashcard,
     id: crypto.randomUUID(),
-    status: flashcard.status || 'learning', // Default status
+    status: flashcard.status || 'learning',
   };
   deck.flashcards.push(newFlashcard);
   saveDeck(deck);
@@ -110,8 +113,7 @@ export function deleteFlashcardFromDeck(deckId: string, flashcardId: string): vo
   saveDeck(deck);
 }
 
+// No longer generates sample data
 export function generateSampleData(): void {
-  // No longer generates sample data
-  // If you want to re-enable, ensure getDecks().length === 0 condition is checked before populating.
-  // For now, users will start with an empty set of decks.
+  // Users will start with an empty set of decks.
 }

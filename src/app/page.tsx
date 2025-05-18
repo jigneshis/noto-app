@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DeckCard } from '@/components/deck-card';
@@ -9,9 +9,10 @@ import { DeckForm } from '@/components/deck-form';
 import { AiFlashcardGeneratorDialog } from '@/components/ai-flashcard-generator-dialog';
 import type { Deck } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, Sparkles, Layers as LayersIconLucide, Loader2, Search } from 'lucide-react'; 
+import { PlusCircle, Sparkles, Layers as LayersIconLucide, Loader2, Search, Tag, X } from 'lucide-react'; 
 import { useToast } from '@/hooks/use-toast';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { cn } from '@/lib/utils';
 
 
 export default function HomePage() {
@@ -22,10 +23,10 @@ export default function HomePage() {
   const { toast } = useToast();
   const [isLoadingDecks, setIsLoadingDecks] = useState(true); 
   const [deckSearchTerm, setDeckSearchTerm] = useState('');
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
 
   useEffect(() => {
     setIsLoadingDecks(true);
-    // Removed call to store.generateSampleData();
     setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setIsLoadingDecks(false);
   }, []);
@@ -58,10 +59,33 @@ export default function HomePage() {
     refreshDecks();
   };
 
-  const filteredDecks = decks.filter(deck => 
-    deck.name.toLowerCase().includes(deckSearchTerm.toLowerCase()) ||
-    (deck.description && deck.description.toLowerCase().includes(deckSearchTerm.toLowerCase()))
-  );
+  const allTags = useMemo(() => {
+    const tagSet = new Set<string>();
+    decks.forEach(deck => deck.tags?.forEach(tag => tagSet.add(tag)));
+    return Array.from(tagSet).sort();
+  }, [decks]);
+
+  const toggleTag = (tag: string) => {
+    setSelectedTags(prev => 
+      prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+    );
+  };
+
+  const clearSelectedTags = () => {
+    setSelectedTags([]);
+  };
+
+  const filteredDecks = useMemo(() => {
+    return decks
+      .filter(deck => 
+        (deck.name.toLowerCase().includes(deckSearchTerm.toLowerCase()) ||
+        (deck.description && deck.description.toLowerCase().includes(deckSearchTerm.toLowerCase())))
+      )
+      .filter(deck => 
+        selectedTags.length === 0 || selectedTags.every(selTag => deck.tags?.includes(selTag))
+      );
+  }, [decks, deckSearchTerm, selectedTags]);
+
 
   if (isLoadingDecks) { 
     return (
@@ -85,8 +109,8 @@ export default function HomePage() {
         </div>
       </div>
       
-      <div className="mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
-        <div className="relative">
+      <div className="mb-4 p-4 bg-card border rounded-lg shadow-sm animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
+        <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
           <Input
             type="search"
@@ -96,12 +120,38 @@ export default function HomePage() {
             className="pl-10 w-full md:max-w-md"
           />
         </div>
+        {allTags.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <Tag className="h-5 w-5 text-muted-foreground" />
+              <h3 className="text-sm font-medium text-muted-foreground">Filter by Tags:</h3>
+              {selectedTags.length > 0 && (
+                <Button variant="ghost" size="sm" onClick={clearSelectedTags} className="text-xs h-auto py-0.5 px-1.5">
+                  <X className="mr-1 h-3 w-3" /> Clear Tags
+                </Button>
+              )}
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {allTags.map(tag => (
+                <Badge
+                  key={tag}
+                  variant={selectedTags.includes(tag) ? "default" : "secondary"}
+                  onClick={() => toggleTag(tag)}
+                  className="cursor-pointer hover:opacity-80 transition-opacity text-xs"
+                >
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
 
       {filteredDecks.length === 0 ? (
         <div className="text-center py-10 bg-card border rounded-lg shadow-sm animate-in fade-in zoom-in-95 duration-500 ease-out delay-300">
           <p className="text-xl text-muted-foreground mb-4">
-            {decks.length > 0 && deckSearchTerm ? 'No decks match your search.' : 'No decks yet. Create your first one or use AI!'}
+            {decks.length === 0 ? 'No decks yet. Create your first one or use AI!' : 'No decks match your search criteria or selected tags.'}
           </p>
           <LayersIconLucide className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
         </div>

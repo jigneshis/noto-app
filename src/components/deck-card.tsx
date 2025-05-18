@@ -5,8 +5,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge'; // Import Badge
 import type { Deck } from '@/lib/types';
-import { FileText, Edit3, Trash2, Layers, Brain, Loader2 } from 'lucide-react';
+import { FileText, Edit3, Trash2, Layers, Brain, Loader2, Tag } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,20 +52,31 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
           />
           {deck.name}
         </CardTitle>
-        {deck.description && <CardDescription>{deck.description}</CardDescription>}
+        {deck.description && <CardDescription className="line-clamp-2">{deck.description}</CardDescription>}
       </CardHeader>
-      <CardContent className="flex-grow">
+      <CardContent className="flex-grow space-y-3">
         <div className="text-sm text-muted-foreground">
           <p>Flashcards: {deck.flashcards.length}</p>
           <p>Last updated: {new Date(deck.updatedAt).toLocaleDateString()}</p>
         </div>
+        {deck.tags && deck.tags.length > 0 && (
+          <div className="flex flex-wrap gap-1 items-center">
+            <Tag className="h-4 w-4 text-muted-foreground mr-1" />
+            {deck.tags.slice(0, 3).map(tag => ( // Show up to 3 tags
+              <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+            ))}
+            {deck.tags.length > 3 && (
+              <Badge variant="outline" className="text-xs">+{deck.tags.length - 3} more</Badge>
+            )}
+          </div>
+        )}
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4">
         <div className="grid grid-cols-1 sm:flex sm:gap-2 w-full sm:w-auto gap-2">
           <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
             <Button 
               variant="outline" 
-              className="w-full" 
+              className="w-full active:scale-95 transition-transform" 
               onClick={() => setActiveAction('view')}
               disabled={activeAction === 'view'}
             >
@@ -79,7 +91,7 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
           <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
               <Button 
                 variant="default" 
-                className="w-full text-accent-foreground"
+                className="w-full text-accent-foreground active:scale-95 transition-transform"
                 style={deckAccentColor ? { backgroundColor: deckAccentColor } : {}}
                 onClick={() => setActiveAction('quiz')}
                 disabled={activeAction === 'quiz' || deck.flashcards.length === 0}
@@ -94,12 +106,12 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
           </Link>
         </div>
         <div className="flex gap-1 self-center sm:self-auto">
-            <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
+            <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck" className="active:scale-95 transition-transform">
                 <Edit3 className="h-5 w-5" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10" aria-label="Delete deck">
+                <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive/90 hover:bg-destructive/10 active:scale-95 transition-transform" aria-label="Delete deck">
                     <Trash2 className="h-5 w-5" />
                 </Button>
               </AlertDialogTrigger>
@@ -114,7 +126,7 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={() => onDelete(deck.id)}
-                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+                    className="bg-destructive hover:bg-destructive/90 text-destructive-foreground active:scale-95 transition-transform"
                   >
                     Delete
                   </AlertDialogAction>

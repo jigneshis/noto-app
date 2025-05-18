@@ -9,7 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
 import type { Deck } from '@/lib/types';
-import { Loader2, Palette } from 'lucide-react';
+import { Loader2, Palette, Tags } from 'lucide-react';
 
 interface DeckFormProps {
   isOpen: boolean;
@@ -19,7 +19,7 @@ interface DeckFormProps {
 }
 
 const accentColorOptions = [
-  { name: 'Default Blue', value: '215 80% 55%' }, // Current primary
+  { name: 'Default Blue', value: '215 80% 55%' },
   { name: 'Forest Green', value: '120 60% 45%' },
   { name: 'Sunset Orange', value: '30 90% 55%' },
   { name: 'Royal Purple', value: '270 60% 55%' },
@@ -33,6 +33,7 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [accentColor, setAccentColor] = useState<string | undefined>(undefined);
+  const [tagsInput, setTagsInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -40,10 +41,12 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
       setName(initialData.name);
       setDescription(initialData.description || '');
       setAccentColor(initialData.accentColor || undefined);
+      setTagsInput((initialData.tags || []).join(', '));
     } else {
       setName('');
       setDescription('');
-      setAccentColor(undefined); // Default to undefined (no custom color)
+      setAccentColor(undefined);
+      setTagsInput('');
     }
     setIsLoading(false); 
   }, [initialData, isOpen]);
@@ -55,12 +58,20 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
       return;
     }
     setIsLoading(true);
+
+    const processedTags = tagsInput
+      .split(',')
+      .map(tag => tag.trim())
+      .filter(tag => tag.length > 0);
+
     const deckData = {
       id: initialData?.id || crypto.randomUUID(),
       name,
       description,
-      accentColor: accentColor === "undefined" || accentColor === "" ? undefined : accentColor, // Store undefined if no color or "Default" is chosen
+      accentColor: accentColor === "undefined" || accentColor === "" ? undefined : accentColor,
+      tags: processedTags,
     };
+
     try {
       if (initialData) {
           onSubmit({ ...initialData, ...deckData });
@@ -108,12 +119,25 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
               />
             </div>
             <div className="space-y-2">
+              <Label htmlFor="tags" className="flex items-center">
+                 <Tags className="mr-2 h-4 w-4 text-muted-foreground" />
+                 Tags (comma-separated)
+              </Label>
+              <Input
+                id="tags"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                disabled={isLoading}
+                placeholder="e.g., biology, exam1, science"
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="accentColor" className="flex items-center">
                 <Palette className="mr-2 h-4 w-4 text-muted-foreground" />
                 Accent Color
               </Label>
               <Select
-                value={accentColor || "undefined"} // Handle undefined for placeholder
+                value={accentColor || "undefined"}
                 onValueChange={(value) => setAccentColor(value === "undefined" ? undefined : value)}
                 disabled={isLoading}
               >
@@ -144,7 +168,7 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={isLoading}>Cancel</Button>
             </DialogClose>
-            <Button type="submit" disabled={isLoading || !name.trim()}>
+            <Button type="submit" disabled={isLoading || !name.trim()} className="active:scale-95 transition-transform">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {initialData ? 'Save Changes' : 'Create Deck'}
             </Button>

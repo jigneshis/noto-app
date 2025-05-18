@@ -4,7 +4,7 @@ export interface Flashcard {
   title: string;
   front: string; // Question
   back: string;  // Answer
-  status?: 'learning' | 'mastered'; // New field for prioritization
+  status?: 'learning' | 'mastered';
 }
 
 export interface Deck {
@@ -15,4 +15,5 @@ export interface Deck {
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
   accentColor?: string; // HSL string, e.g., "210 90% 50%"
+  tags?: string[]; // New field for tags
 }
