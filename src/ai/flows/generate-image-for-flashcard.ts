@@ -54,3 +54,4 @@ const generateImageForFlashcardFlow = ai.defineFlow(
     return { imageDataUri: media.url };
   }
 );
+

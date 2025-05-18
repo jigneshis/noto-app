@@ -146,12 +146,12 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 size="sm"
                 onClick={() => handleGenerateImage('front')}
                 disabled={isGeneratingFrontImage || isLoading}
-                className="mt-2 text-xs"
+                className="mt-2 text-xs active:scale-95 transition-transform"
               >
                 {isGeneratingFrontImage ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Sparkles className="mr-2 h-3 w-3 text-accent" />}
                 Generate Image for Front
               </Button>
-              {frontImage && <img src={frontImage} alt="Generated for front" className={commonImageStyles} />}
+              {frontImage && <img data-ai-hint="flashcard visual" src={frontImage} alt="Generated for front" className={commonImageStyles} />}
             </div>
             <div>
               <Label htmlFor="flashcard-back">Back (Answer)</Label>
@@ -171,12 +171,12 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 size="sm"
                 onClick={() => handleGenerateImage('back')}
                 disabled={isGeneratingBackImage || isLoading}
-                className="mt-2 text-xs"
+                className="mt-2 text-xs active:scale-95 transition-transform"
               >
                 {isGeneratingBackImage ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Sparkles className="mr-2 h-3 w-3 text-accent" />}
                 Generate Image for Back
               </Button>
-              {backImage && <img src={backImage} alt="Generated for back" className={commonImageStyles} />}
+              {backImage && <img data-ai-hint="flashcard visual" src={backImage} alt="Generated for back" className={commonImageStyles} />}
             </div>
             <div>
               <Label className="mb-1 block">Status</Label>
@@ -201,7 +201,7 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
             <DialogClose asChild>
               <Button type="button" variant="outline" disabled={isLoading || isGeneratingFrontImage || isGeneratingBackImage}>Cancel</Button>
             </DialogClose>
-            <Button type="submit" disabled={isLoading || isGeneratingFrontImage || isGeneratingBackImage || !title.trim() || !front.trim() || !back.trim()}>
+            <Button type="submit" disabled={isLoading || isGeneratingFrontImage || isGeneratingBackImage || !title.trim() || !front.trim() || !back.trim()} className="active:scale-95 transition-transform">
               {(isLoading || isGeneratingFrontImage || isGeneratingBackImage) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {initialData ? 'Save Changes' : 'Create Flashcard'}
             </Button>
@@ -211,3 +211,4 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
     </Dialog>
   );
 }
+

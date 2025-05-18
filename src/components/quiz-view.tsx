@@ -404,3 +404,4 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     </Card>
   );
 }
+

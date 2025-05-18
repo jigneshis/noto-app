@@ -251,3 +251,4 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
     </Card>
   );
 }
+

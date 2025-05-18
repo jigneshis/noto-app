@@ -22,3 +22,4 @@ export interface Deck {
 
 // Type for imported deck structure (can be a single deck or an array of decks)
 export type ImportedDecks = Deck | Deck[];
+

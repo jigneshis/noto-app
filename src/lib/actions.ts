@@ -3,7 +3,7 @@
 import { generateFlashcardsFromText as generateFlashcardsFromTextFlow } from '@/ai/flows/generate-flashcards-from-text';
 import { summarizeContentIntoFlashcards as summarizeContentIntoFlashcardsFlow } from '@/ai/flows/summarize-content-into-flashcards';
 import { explainContentSimply as explainContentSimplyFlow } from '@/ai/flows/explain-content-simply';
-import { generateImageForFlashcard as generateImageForFlashcardFlow } from '@/ai/flows/generate-image-for-flashcard'; // Added new flow
+import { generateImageForFlashcard as generateImageForFlashcardFlow } from '@/ai/flows/generate-image-for-flashcard.ts'; // Added new flow
 import type { Flashcard } from './types';
 
 export async function generateFlashcardsFromTextAction(text: string): Promise<Omit<Flashcard, 'id' | 'status'>[]> {
@@ -73,3 +73,4 @@ export async function generateImageForFlashcardAction(prompt: string): Promise<s
     throw new Error(errorMessage);
   }
 }
+
