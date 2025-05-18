@@ -5,8 +5,15 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
+import { useState, useEffect } from 'react';
 
 export default function PrivacyPage() {
+  const [lastUpdated, setLastUpdated] = useState('');
+
+  useEffect(() => {
+    setLastUpdated(new Date().toLocaleDateString());
+  }, []);
+
   return (
     <div className="container mx-auto py-12 px-4 sm:px-6 lg:px-8">
       <div className="mb-8">
@@ -20,7 +27,7 @@ export default function PrivacyPage() {
       <article className="prose dark:prose-invert max-w-none bg-card p-6 sm:p-8 rounded-lg shadow-lg border">
         <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-6">Privacy Policy</h1>
         
-        <p className="text-muted-foreground mb-6">Last updated: {new Date().toLocaleDateString()}</p>
+        {lastUpdated && <p className="text-muted-foreground mb-6">Last updated: {lastUpdated}</p>}
 
         <h2 className="text-2xl font-semibold mt-8 mb-3">1. Introduction</h2>
         <p>
