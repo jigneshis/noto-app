@@ -14,22 +14,26 @@ export function getDecks(): Deck[] {
     ...deck,
     flashcards: (deck.flashcards || []).map(fc => ({
       ...fc,
-      status: fc.status || 'learning' 
+      status: fc.status || 'learning',
+      frontImage: fc.frontImage || undefined,
+      backImage: fc.backImage || undefined,
     })),
-    tags: deck.tags || [], // Ensure tags array exists
+    tags: deck.tags || [],
     accentColor: deck.accentColor || undefined,
   }));
 }
 
 export function getDeck(id: string): Deck | undefined {
   const decks = getDecks();
-  const deck = decks.find(deck => deck.id === id);
+  const deck = decks.find(d => d.id === id);
   if (deck) {
     return {
       ...deck,
       flashcards: (deck.flashcards || []).map(fc => ({
         ...fc,
-        status: fc.status || 'learning'
+        status: fc.status || 'learning',
+        frontImage: fc.frontImage || undefined,
+        backImage: fc.backImage || undefined,
       })),
       tags: deck.tags || [],
       accentColor: deck.accentColor || undefined,
@@ -50,19 +54,34 @@ export function saveDeck(deckToSave: Deck): Deck {
       flashcards: (deckToSave.flashcards || []).map(fc => ({
         ...fc,
         id: fc.id || crypto.randomUUID(),
-        status: fc.status || 'learning'
+        status: fc.status || 'learning',
+        frontImage: fc.frontImage || undefined,
+        backImage: fc.backImage || undefined,
       })),
-      tags: deckToSave.tags || [], // Ensure tags are saved
-      accentColor: deckToSave.accentColor || undefined, 
+      tags: deckToSave.tags || [],
+      accentColor: deckToSave.accentColor || undefined,
   };
 
   if (existingDeckIndex > -1) {
     const originalFlashcards = decks[existingDeckIndex].flashcards;
-    completeDeckData.flashcards = deckToSave.flashcards.length > 0 
-      ? deckToSave.flashcards.map(fc => ({...fc, status: fc.status || 'learning'})) 
-      : originalFlashcards.map(fc => ({...fc, status: fc.status || 'learning'}));
+    // Preserve existing flashcards if deckToSave doesn't provide new ones (e.g. when only deck metadata is updated)
+    // but ensure new fields like images are potentially updated or kept from deckToSave
+     completeDeckData.flashcards = deckToSave.flashcards.length > 0
+      ? deckToSave.flashcards.map(fc => ({
+          ...fc,
+          id: fc.id || crypto.randomUUID(),
+          status: fc.status || 'learning',
+          frontImage: fc.frontImage || undefined,
+          backImage: fc.backImage || undefined,
+        }))
+      : originalFlashcards.map(fc => ({ // if deckToSave.flashcards is empty, keep original ones
+          ...fc,
+          status: fc.status || 'learning',
+          frontImage: fc.frontImage || undefined,
+          backImage: fc.backImage || undefined,
+        }));
   }
-  
+
   if (existingDeckIndex > -1) {
     decks[existingDeckIndex] = completeDeckData;
   } else {
@@ -86,6 +105,8 @@ export function addFlashcardToDeck(deckId: string, flashcard: Omit<Flashcard, 'i
     ...flashcard,
     id: crypto.randomUUID(),
     status: flashcard.status || 'learning',
+    frontImage: flashcard.frontImage || undefined,
+    backImage: flashcard.backImage || undefined,
   };
   deck.flashcards.push(newFlashcard);
   saveDeck(deck);
@@ -98,7 +119,12 @@ export function updateFlashcardInDeck(deckId: string, updatedFlashcard: Flashcar
 
   const flashcardIndex = deck.flashcards.findIndex(fc => fc.id === updatedFlashcard.id);
   if (flashcardIndex > -1) {
-    deck.flashcards[flashcardIndex] = { ...updatedFlashcard, status: updatedFlashcard.status || 'learning' };
+    deck.flashcards[flashcardIndex] = {
+        ...updatedFlashcard,
+        status: updatedFlashcard.status || 'learning',
+        frontImage: updatedFlashcard.frontImage || undefined,
+        backImage: updatedFlashcard.backImage || undefined,
+    };
     saveDeck(deck);
     return updatedFlashcard;
   }
@@ -111,9 +137,4 @@ export function deleteFlashcardFromDeck(deckId: string, flashcardId: string): vo
 
   deck.flashcards = deck.flashcards.filter(fc => fc.id !== flashcardId);
   saveDeck(deck);
-}
-
-// No longer generates sample data
-export function generateSampleData(): void {
-  // Users will start with an empty set of decks.
 }

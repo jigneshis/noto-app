@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type { Deck, Flashcard } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RotateCcw, CheckCircle, XCircle, ArrowRight, Repeat, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter } from 'lucide-react';
+import { RotateCcw, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter, ArrowRight, Repeat, Sparkles } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { explainContentSimplyAction } from '@/lib/actions';
@@ -47,6 +47,9 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const [quizStarted, setQuizStarted] = useState(false);
   const { toast } = useToast();
 
+  const quizCardRef = useRef<HTMLDivElement>(null);
+
+
   const startTheQuiz = useCallback(() => {
     let cardsToQuiz = deck.flashcards;
     if (quizFilter === 'learning') {
@@ -57,7 +60,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
 
     if (cardsToQuiz.length === 0) {
         toast({ title: 'No Cards', description: `No cards match the filter "${quizFilter}". Please adjust filter or add cards.`, variant: 'default', duration: 5000 });
-        setQuizStarted(false); // Stay on filter selection
+        setQuizStarted(false);
         return;
     }
     setShuffledFlashcards(shuffleArray(cardsToQuiz));
@@ -77,33 +80,37 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     setQuizFinished(false);
     setFeedbackGiven(false);
     setExplanation(null);
-    setQuizStarted(false); // Show filter options again
+    setQuizStarted(false);
   }, []);
-  
+
   useEffect(() => {
-    // When the component mounts or deck changes, reset to show filter options
     resetQuiz();
   }, [deck, resetQuiz]);
 
-
   const currentFlashcard = shuffledFlashcards[currentCardIndex];
 
-  const handleShowAnswer = () => {
-    setIsAnswerVisible(true);
-  };
+  const handleShowAnswer = useCallback(() => {
+    if (!quizFinished) {
+      setIsAnswerVisible(true);
+    }
+  }, [quizFinished]);
 
-  const handleFeedback = (isCorrect: boolean) => {
-    if (!isAnswerVisible) {
-      toast({ title: "Reveal Answer First", description: "Please reveal the answer before marking.", variant: "default" });
+  const handleFeedback = useCallback((isCorrect: boolean) => {
+    if (!isAnswerVisible || feedbackGiven || quizFinished) {
+      if (!isAnswerVisible && !quizFinished) {
+         toast({ title: "Reveal Answer First", description: "Please reveal the answer before marking.", variant: "default" });
+      }
       return;
     }
     if (isCorrect) {
       setScore(prevScore => prevScore + 1);
     }
     setFeedbackGiven(true);
-  };
-  
-  const moveToNextCard = () => {
+  }, [isAnswerVisible, feedbackGiven, quizFinished, toast]);
+
+  const moveToNextCard = useCallback(() => {
+    if (quizFinished || !feedbackGiven) return;
+
     if (currentCardIndex < shuffledFlashcards.length - 1) {
       setCurrentCardIndex(prevIndex => prevIndex + 1);
       setIsAnswerVisible(false);
@@ -115,10 +122,11 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
         onQuizComplete(score, shuffledFlashcards.length);
       }
     }
-  };
+  }, [currentCardIndex, shuffledFlashcards.length, quizFinished, feedbackGiven, onQuizComplete, score]);
+
 
   const handleExplain = async () => {
-    if (!currentFlashcard) return;
+    if (!currentFlashcard || quizFinished) return;
     setIsExplaining(true);
     setExplanation(null);
     try {
@@ -135,6 +143,52 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
       setIsExplaining(false);
     }
   };
+  
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (!quizStarted || quizFinished || !currentFlashcard) return;
+      if (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
+        return; // Don't interfere with form inputs
+      }
+
+      switch (event.key) {
+        case ' ': // Spacebar
+          event.preventDefault();
+          if (!isAnswerVisible) {
+            handleShowAnswer();
+          } else if (feedbackGiven) {
+            moveToNextCard();
+          }
+          break;
+        case 'Enter': // Enter
+          event.preventDefault();
+          if (isAnswerVisible && feedbackGiven) {
+            moveToNextCard();
+          }
+          break;
+        case 'ArrowLeft': // Left Arrow
+           event.preventDefault();
+          if (isAnswerVisible && !feedbackGiven) {
+            handleFeedback(false); // Incorrect
+          }
+          break;
+        case 'ArrowRight': // Right Arrow
+           event.preventDefault();
+          if (isAnswerVisible && !feedbackGiven) {
+            handleFeedback(true); // Correct
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [quizStarted, quizFinished, currentFlashcard, isAnswerVisible, feedbackGiven, handleShowAnswer, handleFeedback, moveToNextCard]);
+
 
   if (deck.flashcards.length === 0) {
     return <Card className={cn("w-full max-w-lg mx-auto shadow-xl", className)}><CardContent className="p-6 text-center">This deck has no flashcards to quiz!</CardContent></Card>;
@@ -176,7 +230,6 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     );
   }
 
-
   if (quizFinished) {
     return (
       <Card className={cn("w-full max-w-lg mx-auto shadow-xl animate-in fade-in zoom-in-95 duration-500 ease-out", className)}>
@@ -187,7 +240,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
           <p className="text-xl">Your score: <span className="font-bold text-accent">{score}</span> / {shuffledFlashcards.length}</p>
           <Progress value={(score / shuffledFlashcards.length) * 100} className="w-full" />
           <p className="text-lg">
-            {score / shuffledFlashcards.length >= 0.8 ? "Excellent work! 🎉" : 
+            {score / shuffledFlashcards.length >= 0.8 ? "Excellent work! 🎉" :
              score / shuffledFlashcards.length >= 0.5 ? "Good job, keep practicing! 👍" :
              "Keep trying, you'll get there! 💪"}
           </p>
@@ -201,10 +254,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     );
   }
 
-
   if (!currentFlashcard) {
-     // This can happen briefly if startTheQuiz is called and cardsToQuiz is empty, though that's handled above.
-     // Or if shuffledFlashcards is empty for other reasons (should not happen if quizStarted is true).
      return (
       <Card className={cn("w-full max-w-lg mx-auto shadow-xl", className)}>
         <CardContent className="p-6 text-center">
@@ -215,9 +265,10 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
      );
   }
 
+  const currentImage = isAnswerVisible ? currentFlashcard.backImage : currentFlashcard.frontImage;
 
   return (
-    <Card className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)}>
+    <Card ref={quizCardRef} className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)} tabIndex={-1} /* Allow focus for key events */>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center mb-2">
             <CardTitle className="text-lg sm:text-xl text-primary truncate">{currentFlashcard.title}</CardTitle>
@@ -229,6 +280,9 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
       </CardHeader>
 
       <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center min-h-[200px]">
+        {currentImage && (
+          <img src={currentImage} alt="Flashcard visual" className="max-h-32 w-auto object-contain mb-3 rounded shadow-sm" />
+        )}
         <ScrollArea className="w-full max-h-[150px] mb-4 animate-in fade-in duration-300">
             <div className="text-xl sm:text-2xl font-semibold mb-2 prose dark:prose-invert max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.front}</ReactMarkdown>
@@ -250,7 +304,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
         {explanation && (
           <ScrollArea className="mt-4 p-3 bg-secondary/30 rounded-md max-h-[100px] w-full animate-in fade-in duration-300">
             <div className="text-sm border-l-2 border-accent pl-2 text-left">
-              <p className="font-semibold text-accent flex items-center gap-1"><Lightbulb size={16}/> Simplified:</p>
+              <p className="font-semibold text-accent flex items-center gap-1"><Sparkles size={16}/> Simplified:</p>
               <div className="prose dark:prose-invert prose-sm max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{explanation}</ReactMarkdown>
               </div>

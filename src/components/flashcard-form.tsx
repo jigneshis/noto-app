@@ -8,8 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import type { Flashcard } from '@/lib/types';
-import { Loader2 } from 'lucide-react';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Added for status
+import { Loader2, Image as ImageIcon, Sparkles } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { generateImageForFlashcardAction } from '@/lib/actions'; // Import new action
+import { useToast } from '@/hooks/use-toast';
 
 interface FlashcardFormProps {
   isOpen: boolean;
@@ -20,25 +22,62 @@ interface FlashcardFormProps {
 
 export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: FlashcardFormProps) {
   const [title, setTitle] = useState('');
-  const [front, setFront] = useState(''); // Question
-  const [back, setBack] = useState('');   // Answer
-  const [status, setStatus] = useState<Flashcard['status']>('learning'); // Added status state
+  const [front, setFront] = useState('');
+  const [back, setBack] = useState('');
+  const [status, setStatus] = useState<Flashcard['status']>('learning');
+  const [frontImage, setFrontImage] = useState<string | undefined>(undefined);
+  const [backImage, setBackImage] = useState<string | undefined>(undefined);
+  const [isGeneratingFrontImage, setIsGeneratingFrontImage] = useState(false);
+  const [isGeneratingBackImage, setIsGeneratingBackImage] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (initialData) {
       setTitle(initialData.title);
       setFront(initialData.front);
       setBack(initialData.back);
-      setStatus(initialData.status || 'learning'); // Set status from initialData
+      setStatus(initialData.status || 'learning');
+      setFrontImage(initialData.frontImage || undefined);
+      setBackImage(initialData.backImage || undefined);
     } else {
       setTitle('');
       setFront('');
       setBack('');
-      setStatus('learning'); // Default status for new cards
+      setStatus('learning');
+      setFrontImage(undefined);
+      setBackImage(undefined);
     }
-    setIsLoading(false); // Reset loading state
+    setIsLoading(false);
+    setIsGeneratingFrontImage(false);
+    setIsGeneratingBackImage(false);
   }, [initialData, isOpen]);
+
+  const handleGenerateImage = async (contentType: 'front' | 'back') => {
+    const textForPrompt = contentType === 'front' ? front : back;
+    if (!textForPrompt.trim()) {
+      toast({ title: 'Cannot Generate Image', description: `Please provide some text for the ${contentType} of the card first.`, variant: 'destructive' });
+      return;
+    }
+
+    contentType === 'front' ? setIsGeneratingFrontImage(true) : setIsGeneratingBackImage(true);
+    try {
+      // Construct a slightly more descriptive prompt if a title exists
+      const prompt = title.trim() ? `Flashcard titled "${title}": ${textForPrompt}` : textForPrompt;
+      const imageDataUri = await generateImageForFlashcardAction(prompt);
+      if (contentType === 'front') {
+        setFrontImage(imageDataUri);
+      } else {
+        setBackImage(imageDataUri);
+      }
+      toast({ title: 'Image Generated!', description: `AI generated an image for the ${contentType} of the card.` });
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'Image Generation Failed', description: (error as Error).message, variant: 'destructive' });
+    } finally {
+      contentType === 'front' ? setIsGeneratingFrontImage(false) : setIsGeneratingBackImage(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,27 +87,31 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
     }
     setIsLoading(true);
     const flashcardData = {
-      id: initialData?.id || crypto.randomUUID(), 
+      id: initialData?.id || crypto.randomUUID(),
       title,
       front,
       back,
-      status, // Include status
+      status,
+      frontImage,
+      backImage,
     };
     try {
-      onSubmit(flashcardData);
+      onSubmit(flashcardData as Flashcard); // Cast to Flashcard as ID is now always present
     } catch (error) {
       console.error("Error submitting flashcard form:", error);
     } finally {
       setIsLoading(false);
-       if (!initialData || (initialData && initialData.id === flashcardData.id)) { 
+      if (!initialData || (initialData && initialData.id === flashcardData.id)) {
         onClose();
       }
     }
   };
 
+  const commonImageStyles = "w-full h-32 object-contain border rounded-md bg-muted/20 p-1 mt-2";
+
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => { if (!isLoading) onClose(); }}>
-      <DialogContent className="sm:max-w-lg">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!isLoading && !isGeneratingFrontImage && !isGeneratingBackImage) onClose(); }}>
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Edit Flashcard' : 'Create New Flashcard'}</DialogTitle>
         </DialogHeader>
@@ -96,7 +139,19 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 required
                 disabled={isLoading}
               />
-              <p className="text-xs text-muted-foreground mt-1">Markdown supported (e.g., **bold**, *italic*, - list).</p>
+              <p className="text-xs text-muted-foreground mt-1">Markdown supported.</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleGenerateImage('front')}
+                disabled={isGeneratingFrontImage || isLoading}
+                className="mt-2 text-xs"
+              >
+                {isGeneratingFrontImage ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Sparkles className="mr-2 h-3 w-3 text-accent" />}
+                Generate Image for Front
+              </Button>
+              {frontImage && <img src={frontImage} alt="Generated for front" className={commonImageStyles} />}
             </div>
             <div>
               <Label htmlFor="flashcard-back">Back (Answer)</Label>
@@ -109,13 +164,25 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 required
                 disabled={isLoading}
               />
-              <p className="text-xs text-muted-foreground mt-1">Markdown supported (e.g., **bold**, *italic*, - list).</p>
+              <p className="text-xs text-muted-foreground mt-1">Markdown supported.</p>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => handleGenerateImage('back')}
+                disabled={isGeneratingBackImage || isLoading}
+                className="mt-2 text-xs"
+              >
+                {isGeneratingBackImage ? <Loader2 className="mr-2 h-3 w-3 animate-spin" /> : <Sparkles className="mr-2 h-3 w-3 text-accent" />}
+                Generate Image for Back
+              </Button>
+              {backImage && <img src={backImage} alt="Generated for back" className={commonImageStyles} />}
             </div>
             <div>
               <Label className="mb-1 block">Status</Label>
-              <RadioGroup 
-                value={status} 
-                onValueChange={(value: Flashcard['status']) => setStatus(value)} 
+              <RadioGroup
+                value={status}
+                onValueChange={(value: Flashcard['status']) => setStatus(value)}
                 className="flex gap-4"
                 disabled={isLoading}
               >
@@ -132,10 +199,10 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline" disabled={isLoading}>Cancel</Button>
+              <Button type="button" variant="outline" disabled={isLoading || isGeneratingFrontImage || isGeneratingBackImage}>Cancel</Button>
             </DialogClose>
-            <Button type="submit" disabled={isLoading || !title.trim() || !front.trim() || !back.trim()}>
-              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            <Button type="submit" disabled={isLoading || isGeneratingFrontImage || isGeneratingBackImage || !title.trim() || !front.trim() || !back.trim()}>
+              {(isLoading || isGeneratingFrontImage || isGeneratingBackImage) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {initialData ? 'Save Changes' : 'Create Flashcard'}
             </Button>
           </DialogFooter>

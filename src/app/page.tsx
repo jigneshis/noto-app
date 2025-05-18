@@ -1,15 +1,15 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DeckCard } from '@/components/deck-card';
 import { DeckForm } from '@/components/deck-form';
 import { AiFlashcardGeneratorDialog } from '@/components/ai-flashcard-generator-dialog';
-import type { Deck, Flashcard } from '@/lib/types';
+import type { Deck, Flashcard, ImportedDecks } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, Sparkles, Layers as LayersIconLucide, Loader2, Search, Tag, X, Info } from 'lucide-react';
+import { PlusCircle, Sparkles, Layers as LayersIconLucide, Loader2, Search, Tag, X, Info, Upload, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -30,10 +30,10 @@ export default function HomePage() {
   const [isLoadingDecks, setIsLoadingDecks] = useState(true);
   const [deckSearchTerm, setDeckSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setIsLoadingDecks(true);
-    // Removed sample data generation
     setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setIsLoadingDecks(false);
   }, []);
@@ -60,7 +60,7 @@ export default function HomePage() {
     refreshDecks();
     toast({ title: "Deck Deleted", description: `Deck "${deckToDelete?.name}" has been deleted.`, variant: 'destructive' });
   };
-  
+
   const handleAiDeckGenerated = (newDeck: Deck) => {
     store.saveDeck(newDeck);
     refreshDecks();
@@ -80,7 +80,7 @@ export default function HomePage() {
       name: `${originalDeck.name} (Copy)`,
       flashcards: originalDeck.flashcards.map(fc => ({
         ...fc,
-        id: crypto.randomUUID(), // Ensure new flashcards have new IDs
+        id: crypto.randomUUID(),
       })),
       createdAt: now,
       updatedAt: now,
@@ -89,6 +89,82 @@ export default function HomePage() {
     store.saveDeck(newDeck);
     refreshDecks();
     toast({ title: 'Deck Duplicated!', description: `Deck "${newDeck.name}" created.` });
+  };
+
+  const handleExportDeck = (deckId: string) => {
+    const deckToExport = store.getDeck(deckId);
+    if (!deckToExport) {
+      toast({ title: 'Export Error', description: 'Deck not found.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const jsonString = JSON.stringify(deckToExport, null, 2);
+      const blob = new Blob([jsonString], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${deckToExport.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_noto_deck.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast({ title: 'Deck Exported', description: `"${deckToExport.name}" has been exported.` });
+    } catch (error) {
+      console.error('Error exporting deck:', error);
+      toast({ title: 'Export Failed', description: 'Could not export the deck.', variant: 'destructive' });
+    }
+  };
+
+  const handleImportDecks = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const importedData: ImportedDecks = JSON.parse(text);
+        
+        const decksToImportArray = Array.isArray(importedData) ? importedData : [importedData];
+        let importedCount = 0;
+
+        decksToImportArray.forEach(deck => {
+          // Basic validation
+          if (typeof deck.name !== 'string' || !Array.isArray(deck.flashcards)) {
+            throw new Error(`Invalid deck structure for deck named "${deck.name || 'Unknown'}".`);
+          }
+          const newDeck: Deck = {
+            ...deck,
+            id: crypto.randomUUID(), // Ensure new ID
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            flashcards: deck.flashcards.map((fc: any) => ({
+              ...fc,
+              id: crypto.randomUUID(), // Ensure new flashcard IDs
+              status: fc.status || 'learning',
+              frontImage: fc.frontImage || undefined,
+              backImage: fc.backImage || undefined,
+            })),
+            tags: deck.tags || [],
+            accentColor: deck.accentColor || undefined,
+          };
+          store.saveDeck(newDeck);
+          importedCount++;
+        });
+        
+        refreshDecks();
+        toast({ title: 'Import Successful', description: `${importedCount} deck(s) imported successfully.` });
+      } catch (error) {
+        console.error('Error importing decks:', error);
+        toast({ title: 'Import Failed', description: (error as Error).message || 'Invalid JSON file or deck structure.', variant: 'destructive' });
+      } finally {
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = "";
+        }
+      }
+    };
+    reader.readAsText(file);
   };
 
 
@@ -140,9 +216,19 @@ export default function HomePage() {
             <Button variant="outline" onClick={() => setIsAiGeneratorOpen(true)} className="active:scale-95 transition-transform w-full sm:w-auto">
               <Sparkles className="mr-2 h-5 w-5 text-accent" /> Generate with AI
             </Button>
+             <Button variant="outline" onClick={() => fileInputRef.current?.click()} className="active:scale-95 transition-transform w-full sm:w-auto">
+              <Upload className="mr-2 h-5 w-5" /> Import Decks
+            </Button>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".json"
+              onChange={handleImportDecks}
+              className="hidden"
+            />
           </div>
         </div>
-        
+
         <div className="mb-8 p-4 bg-card border rounded-lg shadow-sm animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
           <div className="flex items-center gap-2 mb-4">
             <Search className="h-5 w-5 text-muted-foreground" />
@@ -208,7 +294,8 @@ export default function HomePage() {
                 deck={deck}
                 onEdit={handleEditDeck}
                 onDelete={handleDeleteDeck}
-                onDuplicate={handleDuplicateDeck} 
+                onDuplicate={handleDuplicateDeck}
+                onExport={handleExportDeck}
                 className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
                 style={{ animationDelay: `${(index % 4) * 75}ms` }}
               />

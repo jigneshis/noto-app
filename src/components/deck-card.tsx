@@ -7,7 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Deck } from '@/lib/types';
-import { FileText, Edit3, Trash2, Layers, Brain, Loader2, Tag, Copy } from 'lucide-react';
+import { FileText, Edit3, Trash2, Layers, Brain, Loader2, Tag, Copy, Download } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,7 @@ interface DeckCardProps {
   onEdit: (deck: Deck) => void;
   onDelete: (deckId: string) => void;
   onDuplicate: (deckId: string) => void;
+  onExport: (deckId: string) => void; // New prop for export
   className?: string;
   style?: React.CSSProperties;
 }
@@ -41,7 +42,7 @@ function truncateDeckName(name: string): string {
   return name;
 }
 
-export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style }: DeckCardProps) {
+export function DeckCard({ deck, onEdit, onDelete, onDuplicate, onExport, className, style }: DeckCardProps) {
   const [activeAction, setActiveAction] = useState<'view' | 'quiz' | null>(null);
   const deckAccentColor = deck.accentColor ? `hsl(${deck.accentColor})` : undefined;
 
@@ -140,6 +141,9 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
         <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
                 <Edit3 className="h-5 w-5" />
+            </Button>
+            <Button variant="ghost" size="icon" onClick={() => onExport(deck.id)} aria-label="Export deck">
+                <Download className="h-5 w-5" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>

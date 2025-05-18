@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
-import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Tag } from 'lucide-react';
+import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star } from 'lucide-react';
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -49,6 +49,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
+    setExplanation(null); // Clear explanation on flip
   };
 
   const handleExplain = async () => {
@@ -70,20 +71,21 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
   };
 
   const currentStatus = flashcard.status || 'learning';
+  const currentImage = isFlipped ? flashcard.backImage : flashcard.frontImage;
 
   return (
     <Card
       className={cn(
-        "w-full shadow-md hover:shadow-2xl transition-shadow duration-300 ease-out min-h-[380px] flex flex-col group relative", // Added relative for status badge positioning
+        "w-full shadow-md hover:shadow-2xl transition-shadow duration-300 ease-out min-h-[380px] flex flex-col group relative",
         className
       )}
       style={style}
     >
       {currentStatus === 'mastered' && <Star className="h-5 w-5 text-yellow-400 fill-yellow-400 absolute top-3 right-3 z-10" title="Mastered" />}
       {(currentStatus === 'learning') && <Lightbulb className="h-5 w-5 text-blue-400 fill-blue-400 absolute top-3 right-3 z-10" title="Learning" />}
-      
+
       <div
-        className="flex-grow [perspective:1000px] cursor-pointer p-4 pt-10" // Added pt-10 to make space for status badge
+        className="flex-grow [perspective:1000px] cursor-pointer p-4 pt-10"
         onClick={handleFlip}
       >
         <div
@@ -98,6 +100,9 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
               <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
+              {flashcard.frontImage && (
+                <img src={flashcard.frontImage} alt="Front visual" className="max-h-24 w-auto object-contain mb-2 rounded" />
+              )}
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Question:</p>
                 <div className="text-md prose dark:prose-invert prose-sm max-w-none">
@@ -113,6 +118,9 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
               <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
+              {flashcard.backImage && (
+                <img src={flashcard.backImage} alt="Back visual" className="max-h-24 w-auto object-contain mb-2 rounded" />
+              )}
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Answer:</p>
                  <div className="text-md prose dark:prose-invert prose-sm max-w-none">
