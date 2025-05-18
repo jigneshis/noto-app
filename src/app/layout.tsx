@@ -5,6 +5,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { Toaster } from '@/components/ui/toaster';
 import { Header } from '@/components/header';
+import { Footer } from '@/components/footer'; // Import Footer
 import { ThemeProvider } from 'next-themes';
 
 const fontSans = FontSans({
@@ -39,6 +40,7 @@ export default function RootLayout({
             <div className="relative flex min-h-screen flex-col">
               <Header />
               <main className="flex-1">{children}</main>
+              <Footer /> {/* Add Footer here */}
             </div>
             <Toaster />
         </ThemeProvider>
