@@ -42,7 +42,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
   return (
     <Card 
       className={cn(
-        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[400px]", 
+        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[420px]", // Increased min-height
         className
       )}
       style={{ ...style, borderTop: deckAccentColor ? `3px solid ${deckAccentColor}` : undefined }}
