@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -7,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import type { Deck } from '@/lib/types';
+import { Loader2 } from 'lucide-react';
 
 interface DeckFormProps {
   isOpen: boolean;
@@ -18,6 +20,7 @@ interface DeckFormProps {
 export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormProps) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -27,30 +30,42 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
       setName('');
       setDescription('');
     }
+    setIsLoading(false); // Reset loading state when dialog opens or initialData changes
   }, [initialData, isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) {
-      // Basic validation, consider using react-hook-form for more complex forms
       alert('Deck name is required.');
       return;
     }
+    setIsLoading(true);
     const deckData = {
       id: initialData?.id || crypto.randomUUID(),
       name,
       description,
     };
-    if (initialData) {
-        onSubmit({ ...initialData, ...deckData });
-    } else {
-        onSubmit({ ...deckData, flashcards: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Deck);
+    try {
+      if (initialData) {
+          onSubmit({ ...initialData, ...deckData });
+      } else {
+          onSubmit({ ...deckData, flashcards: [], createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() } as Deck);
+      }
+      // Simulate async operation for demo purposes if onSubmit is synchronous
+      // await new Promise(resolve => setTimeout(resolve, 500)); 
+    } catch (error) {
+      console.error("Error submitting deck form:", error);
+      // Optionally show a toast error
+    } finally {
+      setIsLoading(false);
+      if (!initialData || (initialData && initialData.id === deckData.id)) { // only close if submission was "successful"
+        onClose();
+      }
     }
-    onClose();
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!isLoading) onClose(); }}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{initialData ? 'Edit Deck' : 'Create New Deck'}</DialogTitle>
@@ -67,6 +82,7 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
                 onChange={(e) => setName(e.target.value)}
                 className="col-span-3"
                 required
+                disabled={isLoading}
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -79,14 +95,18 @@ export function DeckForm({ isOpen, onClose, onSubmit, initialData }: DeckFormPro
                 onChange={(e) => setDescription(e.target.value)}
                 className="col-span-3"
                 rows={3}
+                disabled={isLoading}
               />
             </div>
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="outline">Cancel</Button>
+              <Button type="button" variant="outline" disabled={isLoading}>Cancel</Button>
             </DialogClose>
-            <Button type="submit">{initialData ? 'Save Changes' : 'Create Deck'}</Button>
+            <Button type="submit" disabled={isLoading || !name.trim()}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {initialData ? 'Save Changes' : 'Create Deck'}
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>
