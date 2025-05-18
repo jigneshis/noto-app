@@ -27,7 +27,7 @@ interface DeckCardProps {
   onEdit: (deck: Deck) => void;
   onDelete: (deckId: string) => void;
   onDuplicate: (deckId: string) => void;
-  onExport: (deckId: string) => void; // New prop for export
+  onExport: (deckId: string) => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -92,6 +92,10 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, onExport, classN
             <Progress value={masteryPercentage} className="h-2" />
           </div>
         )}
+        <Button variant="outline" size="sm" onClick={() => onExport(deck.id)} className="w-full mt-2">
+            <Download className="mr-2 h-4 w-4" />
+            Export Deck
+        </Button>
         {deck.tags && deck.tags.length > 0 && (
           <div className="flex flex-wrap gap-1 items-center pt-1">
             <Tag className="h-4 w-4 text-muted-foreground mr-1" />
@@ -141,9 +145,6 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, onExport, classN
         <div className="flex items-center gap-1">
             <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
                 <Edit3 className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={() => onExport(deck.id)} aria-label="Export deck">
-                <Download className="h-5 w-5" />
             </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
