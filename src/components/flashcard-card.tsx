@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
-import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star } from 'lucide-react';
+import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Volume2 } from 'lucide-react'; // Added Volume2
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -45,11 +45,16 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
   const [isFlipped, setIsFlipped] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { toast } = useToast();
 
   const handleFlip = () => {
     setIsFlipped(!isFlipped);
     setExplanation(null); // Clear explanation on flip
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   };
 
   const handleExplain = async () => {
@@ -69,6 +74,39 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
       setIsExplaining(false);
     }
   };
+
+  const handleSpeak = () => {
+    if (!('speechSynthesis' in window)) {
+      toast({ title: 'TTS Not Supported', description: 'Your browser does not support text-to-speech.', variant: 'destructive' });
+      return;
+    }
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false); // Explicitly set to false when cancelling
+      // If we were speaking the current text and user clicks again, it effectively stops.
+      // If they click while other text was speaking, it stops that and will start new below.
+    }
+    
+    // Allow a small delay for cancel to process before speaking again if it was the same button.
+    // This timeout helps if the user double-clicks to stop and restart speech.
+    setTimeout(() => {
+        const textToSpeak = isFlipped ? flashcard.back : flashcard.front;
+        if (!textToSpeak.trim()) {
+            toast({ title: 'Nothing to speak', description: 'There is no text on this side of the card.', variant: 'default' });
+            return;
+        }
+        const utterance = new SpeechSynthesisUtterance(textToSpeak);
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => {
+            setIsSpeaking(false);
+            toast({ title: 'Speech Error', description: 'Could not play audio.', variant: 'destructive'});
+        };
+        window.speechSynthesis.speak(utterance);
+    }, 50);
+  };
+
 
   const currentStatus = flashcard.status || 'learning';
   const currentImage = isFlipped ? flashcard.backImage : flashcard.frontImage;
@@ -101,7 +139,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
               {flashcard.frontImage && (
-                <img src={flashcard.frontImage} alt="Front visual" className="max-h-24 w-auto object-contain mb-2 rounded" />
+                <img data-ai-hint="flashcard visual" src={flashcard.frontImage} alt="Front visual" className="max-h-24 w-auto object-contain mb-2 rounded" />
               )}
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Question:</p>
@@ -119,7 +157,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
             </CardHeader>
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
               {flashcard.backImage && (
-                <img src={flashcard.backImage} alt="Back visual" className="max-h-24 w-auto object-contain mb-2 rounded" />
+                <img data-ai-hint="flashcard visual" src={flashcard.backImage} alt="Back visual" className="max-h-24 w-auto object-contain mb-2 rounded" />
               )}
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Answer:</p>
@@ -150,13 +188,16 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
       )}
 
       <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t mt-auto px-6 pb-6">
-        <div className="flex gap-2 items-center">
+        <div className="flex gap-2 items-center flex-wrap">
           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleFlip(); }} className="active:scale-95 transition-transform">
               <RotateCcw className="mr-2 h-4 w-4" /> Flip
           </Button>
           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleExplain(); }} disabled={isExplaining} className="active:scale-95 transition-transform">
               {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-accent" />}
               Explain
+          </Button>
+           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleSpeak(); }} disabled={isSpeaking} className="active:scale-95 transition-transform">
+              <Volume2 className="mr-2 h-4 w-4" /> {isSpeaking ? 'Speaking...' : 'Speak'}
           </Button>
         </div>
         <div className="flex gap-1 items-center">

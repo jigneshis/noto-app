@@ -6,7 +6,7 @@ import type { Deck, Flashcard } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RotateCcw, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter, ArrowRight, Repeat, Sparkles } from 'lucide-react';
+import { RotateCcw, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter, ArrowRight, Repeat, Sparkles, Volume2 } from 'lucide-react'; // Added Volume2
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { explainContentSimplyAction } from '@/lib/actions';
@@ -45,6 +45,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const [isExplaining, setIsExplaining] = useState(false);
   const [quizFilter, setQuizFilter] = useState<QuizFilter>('all');
   const [quizStarted, setQuizStarted] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const { toast } = useToast();
 
   const quizCardRef = useRef<HTMLDivElement>(null);
@@ -71,6 +72,10 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     setFeedbackGiven(false);
     setExplanation(null);
     setQuizStarted(true);
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   }, [deck.flashcards, quizFilter, toast]);
 
   const resetQuiz = useCallback(() => {
@@ -81,10 +86,20 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     setFeedbackGiven(false);
     setExplanation(null);
     setQuizStarted(false);
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   }, []);
 
   useEffect(() => {
     resetQuiz();
+    // Cleanup speech synthesis on component unmount
+    return () => {
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+      }
+    };
   }, [deck, resetQuiz]);
 
   const currentFlashcard = shuffledFlashcards[currentCardIndex];
@@ -92,6 +107,10 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const handleShowAnswer = useCallback(() => {
     if (!quizFinished) {
       setIsAnswerVisible(true);
+      if (window.speechSynthesis && window.speechSynthesis.speaking) {
+        window.speechSynthesis.cancel();
+        setIsSpeaking(false);
+      }
     }
   }, [quizFinished]);
 
@@ -122,6 +141,10 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
         onQuizComplete(score, shuffledFlashcards.length);
       }
     }
+    if (window.speechSynthesis && window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
   }, [currentCardIndex, shuffledFlashcards.length, quizFinished, feedbackGiven, onQuizComplete, score]);
 
 
@@ -143,16 +166,45 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
       setIsExplaining(false);
     }
   };
+
+  const handleSpeak = () => {
+    if (!currentFlashcard) return;
+    if (!('speechSynthesis' in window)) {
+      toast({ title: 'TTS Not Supported', description: 'Your browser does not support text-to-speech.', variant: 'destructive' });
+      return;
+    }
+
+    if (window.speechSynthesis.speaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false); 
+    }
+    
+    setTimeout(() => {
+      const textToSpeak = isAnswerVisible ? currentFlashcard.back : currentFlashcard.front;
+      if (!textToSpeak.trim()) {
+          toast({ title: 'Nothing to speak', description: 'There is no text on this side of the card.', variant: 'default' });
+          return;
+      }
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = () => {
+          setIsSpeaking(false);
+          toast({ title: 'Speech Error', description: 'Could not play audio.', variant: 'destructive'});
+      };
+      window.speechSynthesis.speak(utterance);
+    }, 50);
+  };
   
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (!quizStarted || quizFinished || !currentFlashcard) return;
       if (document.activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) {
-        return; // Don't interfere with form inputs
+        return; 
       }
 
       switch (event.key) {
-        case ' ': // Spacebar
+        case ' ': 
           event.preventDefault();
           if (!isAnswerVisible) {
             handleShowAnswer();
@@ -160,22 +212,22 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
             moveToNextCard();
           }
           break;
-        case 'Enter': // Enter
+        case 'Enter': 
           event.preventDefault();
           if (isAnswerVisible && feedbackGiven) {
             moveToNextCard();
           }
           break;
-        case 'ArrowLeft': // Left Arrow
+        case 'ArrowLeft':
            event.preventDefault();
           if (isAnswerVisible && !feedbackGiven) {
-            handleFeedback(false); // Incorrect
+            handleFeedback(false); 
           }
           break;
-        case 'ArrowRight': // Right Arrow
+        case 'ArrowRight': 
            event.preventDefault();
           if (isAnswerVisible && !feedbackGiven) {
-            handleFeedback(true); // Correct
+            handleFeedback(true); 
           }
           break;
         default:
@@ -268,7 +320,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const currentImage = isAnswerVisible ? currentFlashcard.backImage : currentFlashcard.frontImage;
 
   return (
-    <Card ref={quizCardRef} className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)} tabIndex={-1} /* Allow focus for key events */>
+    <Card ref={quizCardRef} className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)} tabIndex={-1}>
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center mb-2">
             <CardTitle className="text-lg sm:text-xl text-primary truncate">{currentFlashcard.title}</CardTitle>
@@ -281,7 +333,7 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
 
       <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center min-h-[200px]">
         {currentImage && (
-          <img src={currentImage} alt="Flashcard visual" className="max-h-32 w-auto object-contain mb-3 rounded shadow-sm" />
+          <img data-ai-hint="flashcard visual" src={currentImage} alt="Flashcard visual" className="max-h-32 w-auto object-contain mb-3 rounded shadow-sm" />
         )}
         <ScrollArea className="w-full max-h-[150px] mb-4 animate-in fade-in duration-300">
             <div className="text-xl sm:text-2xl font-semibold mb-2 prose dark:prose-invert max-w-none">
@@ -337,10 +389,15 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
           </>
         )}
         <div className="flex flex-col sm:flex-row w-full sm:justify-between items-center mt-2 gap-2 sm:gap-0">
-          <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
-            {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
-            Explain this
-          </Button>
+            <div className="flex gap-2 items-center">
+                <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
+                    {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
+                    Explain this
+                </Button>
+                <Button variant="outline" size="sm" onClick={handleSpeak} disabled={isSpeaking || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
+                    <Volume2 className="mr-2 h-4 w-4" /> {isSpeaking ? 'Speaking...' : 'Speak'}
+                </Button>
+            </div>
           <span className="text-sm font-medium text-muted-foreground">Score: {score}</span>
         </div>
       </CardFooter>
