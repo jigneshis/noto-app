@@ -168,12 +168,12 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
             )}
           >
             {/* Front Face */}
-            <div className="absolute inset-0 [backface-visibility:hidden] flex flex-col bg-card rounded-lg border shadow-sm">
+            <div className="absolute inset-0 [backface-visibility:hidden] flex flex-col bg-card rounded-lg border shadow-sm overflow-hidden">
               <CardContent className="flex-grow flex flex-col items-center p-4 text-center [transform:translateZ(0px)]">
                 {renderImageThumbnail(flashcard.frontImage, "Front visual")}
                 <ScrollArea className={cn("w-full mt-2", flashcard.frontImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Question:</p>
-                  <div className="text-md prose dark:prose-invert prose-sm max-w-none">
+                  <div className="text-md prose dark:prose-invert prose-sm max-w-none text-center [transform:translateZ(0px)]">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.front}</ReactMarkdown>
                   </div>
                 </ScrollArea>
@@ -181,12 +181,12 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
             </div>
 
             {/* Back Face */}
-            <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col bg-card rounded-lg border shadow-sm">
+            <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col bg-card rounded-lg border shadow-sm overflow-hidden">
               <CardContent className="flex-grow flex flex-col items-center p-4 text-center [transform:translateZ(0px)]">
                 {renderImageThumbnail(flashcard.backImage, "Back visual")}
                 <ScrollArea className={cn("w-full mt-2", flashcard.backImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Answer:</p>
-                  <div className="text-md prose dark:prose-invert prose-sm max-w-none">
+                  <div className="text-md prose dark:prose-invert prose-sm max-w-none text-center [transform:translateZ(0px)]">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.back}</ReactMarkdown>
                   </div>
                 </ScrollArea>
