@@ -13,4 +13,6 @@ export interface Deck {
   flashcards: Flashcard[];
   createdAt: string; // ISO date string
   updatedAt: string; // ISO date string
+  accentColor?: string; // HSL string, e.g., "210 90% 50%"
 }
+

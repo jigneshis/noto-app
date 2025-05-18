@@ -30,18 +30,25 @@ interface DeckCardProps {
 
 export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardProps) {
   const [activeAction, setActiveAction] = useState<'view' | 'quiz' | null>(null);
+  const deckAccentColor = deck.accentColor ? `hsl(${deck.accentColor})` : undefined;
 
   return (
     <Card 
       className={cn(
-        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-105 transition-all duration-300 ease-out",
+        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group",
         className
       )}
-      style={style}
+      style={{ ...style, borderTop: deckAccentColor ? `3px solid ${deckAccentColor}` : undefined }}
     >
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-primary">
-          <Layers className="h-6 w-6" />
+        <CardTitle 
+          className="flex items-center gap-2 text-primary" 
+          style={deckAccentColor ? { color: deckAccentColor } : {}}
+        >
+          <Layers 
+            className="h-6 w-6" 
+            style={deckAccentColor ? { color: deckAccentColor } : {}}
+          />
           {deck.name}
         </CardTitle>
         {deck.description && <CardDescription>{deck.description}</CardDescription>}
@@ -53,7 +60,6 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
         </div>
       </CardContent>
       <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4">
-        {/* Group 1: View & Quiz Buttons */}
         <div className="grid grid-cols-1 sm:flex sm:gap-2 w-full sm:w-auto gap-2">
           <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
             <Button 
@@ -73,7 +79,8 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
           <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
               <Button 
                 variant="default" 
-                className="w-full bg-accent hover:bg-accent/90 text-accent-foreground"
+                className="w-full text-accent-foreground"
+                style={deckAccentColor ? { backgroundColor: deckAccentColor } : {}}
                 onClick={() => setActiveAction('quiz')}
                 disabled={activeAction === 'quiz' || deck.flashcards.length === 0}
               >
@@ -86,7 +93,6 @@ export function DeckCard({ deck, onEdit, onDelete, className, style }: DeckCardP
               </Button>
           </Link>
         </div>
-        {/* Group 2: Action Icons */}
         <div className="flex gap-1 self-center sm:self-auto">
             <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
                 <Edit3 className="h-5 w-5" />

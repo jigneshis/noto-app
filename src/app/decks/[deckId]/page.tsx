@@ -13,13 +13,12 @@ import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Lightbulb } from 'l
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-// import { useAuth } from '@/contexts/auth-context'; // Removed
+
 
 export default function DeckPage() {
   const params = useParams();
   const router = useRouter();
   const deckId = params.deckId as string;
-  // const { user, loading: authLoading } = useAuth(); // Removed
   
   const [deck, setDeck] = useState<Deck | null>(null);
   const [isLoadingDeck, setIsLoadingDeck] = useState(true);
@@ -29,20 +28,14 @@ export default function DeckPage() {
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
 
-  // useEffect(() => { // Removed auth redirection
-  //   if (!authLoading && !user) {
-  //     router.push('/login');
-  //   }
-  // }, [user, authLoading, router]);
-
   useEffect(() => {
     setIsLoadingDeck(true);
-    if (deckId) { // No longer conditional on user
+    if (deckId) { 
       const currentDeck = store.getDeck(deckId);
       if (currentDeck) {
         setDeck(currentDeck);
         if (typeof window !== 'undefined') {
-             setShareableLink(`${window.location.origin}/decks/${deckId}`);
+             setShareableLink(`${window.location.origin}/decks/${deckId}`); // This link won't work without auth & shared backend
         }
       } else {
         toast({ title: 'Deck not found', variant: 'destructive' });
@@ -53,14 +46,13 @@ export default function DeckPage() {
   }, [deckId, router, toast]);
 
   const refreshDeck = () => {
-    // No longer conditional on user
     if (deckId) {
       setDeck(store.getDeck(deckId) || null);
     }
   };
 
   const handleFlashcardSubmit = (flashcardData: Omit<Flashcard, 'id'> | Flashcard) => {
-    if (!deck) return; // No longer conditional on user
+    if (!deck) return; 
 
     if ('id' in flashcardData && editingFlashcard) { 
       store.updateFlashcardInDeck(deck.id, flashcardData as Flashcard);
@@ -74,13 +66,12 @@ export default function DeckPage() {
   };
 
   const handleEditFlashcard = (flashcard: Flashcard) => {
-    // No longer conditional on user
     setEditingFlashcard(flashcard);
     setIsFlashcardFormOpen(true);
   };
 
   const handleDeleteFlashcard = (flashcardId: string) => {
-    if (!deck) return; // No longer conditional on user
+    if (!deck) return; 
     const fcToDelete = deck.flashcards.find(fc => fc.id === flashcardId);
     store.deleteFlashcardFromDeck(deck.id, flashcardId);
     refreshDeck();
@@ -98,7 +89,9 @@ export default function DeckPage() {
     });
   };
 
-  if (isLoadingDeck) { // Changed from authLoading || !user
+  const deckAccentColor = deck?.accentColor ? `hsl(${deck.accentColor})` : undefined;
+
+  if (isLoadingDeck) { 
     return (
       <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -107,7 +100,6 @@ export default function DeckPage() {
   }
 
   if (!deck) {
-    // This state can occur if deck load fails
     return <div className="container mx-auto py-8 text-center">Deck not found or failed to load.</div>;
   }
 
@@ -121,11 +113,19 @@ export default function DeckPage() {
         <ArrowLeft className="mr-2 h-4 w-4" /> Back to Decks
       </Button>
 
-      <div className="mb-8 p-6 bg-card rounded-lg shadow-sm border">
-        <h1 className="text-2xl sm:text-3xl font-bold text-primary mb-2 animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out">{deck.name}</h1>
+      <div 
+        className="mb-8 p-6 bg-card rounded-lg shadow-sm border"
+        style={deckAccentColor ? { borderTop: `4px solid ${deckAccentColor}` } : {}}
+      >
+        <h1 
+          className="text-2xl sm:text-3xl font-bold text-primary mb-2 animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out"
+          style={deckAccentColor ? { color: deckAccentColor } : {}}
+        >
+          {deck.name}
+        </h1>
         {deck.description && <p className="text-muted-foreground mb-4 animate-in fade-in slide-in-from-top-5 duration-500 delay-200 ease-out">{deck.description}</p>}
          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center animate-in fade-in slide-in-from-bottom-5 duration-500 delay-300 ease-out">
-            <Label htmlFor="share-link" className="text-sm font-medium shrink-0">Share this deck:</Label>
+            <Label htmlFor="share-link" className="text-sm font-medium shrink-0">Share this deck (local only):</Label>
             <div className="flex w-full max-w-md">
               <Input id="share-link" type="text" value={shareableLink} readOnly className="flex-grow rounded-r-none"/>
               <Button onClick={copyToClipboard} variant="outline" className="rounded-l-none active:scale-95 transition-transform">
@@ -139,12 +139,20 @@ export default function DeckPage() {
       <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-400 ease-out">
         <h2 className="text-xl sm:text-2xl font-semibold">Flashcards ({deck.flashcards.length})</h2>
         <div className="flex gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
-            <Button onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }} className="active:scale-95 transition-transform w-full sm:w-auto">
+            <Button 
+                onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }} 
+                className="active:scale-95 transition-transform w-full sm:w-auto"
+                style={deckAccentColor ? { backgroundColor: deckAccentColor, color: 'hsl(var(--primary-foreground))' } : {}}
+            >
                 <PlusCircle className="mr-2 h-5 w-5" /> Add Flashcard
             </Button>
             {deck.flashcards.length > 0 && (
                 <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
-                    <Button variant="default" className="bg-accent hover:bg-accent/90 text-accent-foreground active:scale-95 transition-transform w-full sm:w-auto">
+                    <Button 
+                        variant="default" 
+                        className="text-accent-foreground active:scale-95 transition-transform w-full sm:w-auto"
+                        style={deckAccentColor ? { backgroundColor: deckAccentColor, color: 'hsl(var(--primary-foreground))', opacity: 0.9 } : { backgroundColor: 'hsl(var(--accent))' }}
+                    >
                         <Brain className="mr-2 h-5 w-5" /> Start Quiz
                     </Button>
                 </Link>
@@ -166,7 +174,7 @@ export default function DeckPage() {
               onEdit={handleEditFlashcard}
               onDelete={handleDeleteFlashcard}
               className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
-              style={{ animationDelay: `${(index % 9) * 75}ms` }} // Stagger animation
+              style={{ animationDelay: `${(index % 9) * 75}ms` }} 
             />
           ))}
         </div>
@@ -182,7 +190,6 @@ export default function DeckPage() {
   );
 }
 
-// Renamed LightbulbIcon to EmptyFlashcardIcon to be more specific
 function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
     <svg
@@ -197,7 +204,6 @@ function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
       strokeLinecap="round"
       strokeLinejoin="round"
     >
-      {/* Simple stack of cards icon */}
       <rect x="2" y="7" width="18" height="12" rx="2" ry="2" />
       <path d="M4 7V5a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v2" />
       <path d="M6 7V3a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v4" />
