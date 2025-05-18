@@ -25,9 +25,7 @@ export default function HomePage() {
 
   useEffect(() => {
     setIsLoadingDecks(true);
-    if (store.getDecks().length === 0) {
-       store.generateSampleData();
-    }
+    // Removed call to store.generateSampleData();
     setDecks(store.getDecks().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     setIsLoadingDecks(false);
   }, []);

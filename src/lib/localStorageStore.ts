@@ -111,46 +111,7 @@ export function deleteFlashcardFromDeck(deckId: string, flashcardId: string): vo
 }
 
 export function generateSampleData(): void {
-  if (typeof window === 'undefined') return;
-  if (getDecks().length > 0) return;
-
-  const sampleDecks: Deck[] = [
-    {
-      id: crypto.randomUUID(),
-      name: 'JavaScript Basics',
-      description: 'Fundamental concepts of JavaScript programming.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      flashcards: [
-        { id: crypto.randomUUID(), title: 'Variable Declaration', front: 'How do you declare a variable in JavaScript?', back: 'Using var, let, or const keywords.', status: 'learning' },
-        { id: crypto.randomUUID(), title: 'Data Types', front: 'Name three primitive data types in JavaScript.', back: 'String, Number, Boolean (also: null, undefined, Symbol, BigInt).', status: 'mastered' },
-      ],
-      accentColor: "240 60% 60%", 
-    },
-    {
-      id: crypto.randomUUID(),
-      name: 'World Capitals',
-      description: 'Learn the capitals of various countries.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      flashcards: [
-        { id: crypto.randomUUID(), title: 'France', front: 'What is the capital of France?', back: 'Paris', status: 'learning' },
-        { id: crypto.randomUUID(), title: 'Japan', front: 'What is the capital of Japan?', back: 'Tokyo', status: 'learning' },
-        { id: crypto.randomUUID(), title: 'Canada', front: 'What is the capital of Canada?', back: 'Ottawa', status: 'mastered' },
-      ],
-      accentColor: "120 60% 45%", 
-    },
-    {
-      id: crypto.randomUUID(),
-      name: 'Solar System Facts',
-      description: 'Explore planets and celestial bodies.',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      flashcards: [
-        { id: crypto.randomUUID(), title: 'Largest Planet', front: 'What is the largest planet in our solar system?', back: 'Jupiter', status: 'learning' },
-        { id: crypto.randomUUID(), title: 'Hottest Planet', front: 'What is the hottest planet in our solar system?', back: 'Venus', status: 'learning' },
-      ],
-    },
-  ];
-  localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(sampleDecks));
+  // No longer generates sample data
+  // If you want to re-enable, ensure getDecks().length === 0 condition is checked before populating.
+  // For now, users will start with an empty set of decks.
 }
