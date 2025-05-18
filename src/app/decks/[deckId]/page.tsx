@@ -15,6 +15,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { QuickAddFlashcardForm } from '@/components/quick-add-flashcard-form'; // Import QuickAddFlashcardForm
 
+const MAX_DECK_NAME_LENGTH = 21;
+const TRUNCATION_SUFFIX = "......";
+
+function truncateDeckName(name: string): string {
+  if (name.length > MAX_DECK_NAME_LENGTH) {
+    return name.substring(0, MAX_DECK_NAME_LENGTH) + TRUNCATION_SUFFIX;
+  }
+  return name;
+}
 
 export default function DeckPage() {
   const params = useParams();
@@ -121,6 +130,8 @@ export default function DeckPage() {
   if (!deck) {
     return <div className="container mx-auto py-8 text-center">Deck not found or failed to load.</div>;
   }
+  
+  const displayedDeckName = truncateDeckName(deck.name);
 
   return (
     <div className="container mx-auto py-8 px-4">
@@ -140,7 +151,7 @@ export default function DeckPage() {
           className="text-2xl sm:text-3xl font-bold text-primary mb-2 animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out"
           style={deckAccentColor ? { color: deckAccentColor } : {}}
         >
-          {deck.name}
+          {displayedDeckName}
         </h1>
         {deck.description && <p className="text-muted-foreground mb-4 animate-in fade-in slide-in-from-top-5 duration-500 delay-200 ease-out">{deck.description}</p>}
          <div className="flex flex-col sm:flex-row gap-2 items-start sm:items-center animate-in fade-in slide-in-from-bottom-5 duration-500 delay-300 ease-out">
@@ -261,4 +272,3 @@ function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
-

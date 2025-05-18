@@ -31,6 +31,16 @@ interface DeckCardProps {
   style?: React.CSSProperties;
 }
 
+const MAX_DECK_NAME_LENGTH = 21;
+const TRUNCATION_SUFFIX = "......";
+
+function truncateDeckName(name: string): string {
+  if (name.length > MAX_DECK_NAME_LENGTH) {
+    return name.substring(0, MAX_DECK_NAME_LENGTH) + TRUNCATION_SUFFIX;
+  }
+  return name;
+}
+
 export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style }: DeckCardProps) {
   const [activeAction, setActiveAction] = useState<'view' | 'quiz' | null>(null);
   const deckAccentColor = deck.accentColor ? `hsl(${deck.accentColor})` : undefined;
@@ -38,6 +48,8 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
   const masteredCards = deck.flashcards.filter(fc => fc.status === 'mastered').length;
   const totalCards = deck.flashcards.length;
   const masteryPercentage = totalCards > 0 ? Math.round((masteredCards / totalCards) * 100) : 0;
+
+  const displayedDeckName = truncateDeckName(deck.name);
 
   return (
     <Card
@@ -57,7 +69,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
               className="h-6 w-6"
               style={deckAccentColor ? { color: deckAccentColor } : {}}
             />
-            {deck.name}
+            {displayedDeckName}
           </CardTitle>
           {deck.description && <CardDescription className="line-clamp-2 mt-1">{deck.description}</CardDescription>}
         </div>
@@ -126,7 +138,6 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
           </Link>
         </div>
         <div className="flex items-center gap-1">
-            {/* Duplicate button removed from here */}
             <Button variant="ghost" size="icon" onClick={() => onEdit(deck)} aria-label="Edit deck">
                 <Edit3 className="h-5 w-5" />
             </Button>
@@ -140,7 +151,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
                 <AlertDialogHeader>
                   <AlertDialogTitle>Are you sure?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the deck "{deck.name}" and all its flashcards.
+                    This action cannot be undone. This will permanently delete the deck "{truncateDeckName(deck.name)}" and all its flashcards.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
