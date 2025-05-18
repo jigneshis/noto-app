@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'; // Removed CardHeader import as it's no longer used directly in faces
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
 import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Volume2, Download } from 'lucide-react';
@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogFooter as ModalFooter } from "@/components/ui/dialog"; // Renamed DialogFooter to avoid conflict
+import { Dialog, DialogContent, DialogFooter as ModalFooter } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -116,7 +116,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
     if (!largeImageSrc) return;
     const link = document.createElement('a');
     link.href = largeImageSrc;
-    link.download = 'flashcard_image.png'; // You can make the filename more dynamic if needed
+    link.download = 'flashcard_image.png';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -132,7 +132,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
         data-ai-hint="flashcard visual"
         src={imageUrl}
         alt={altText}
-        className="h-20 w-20 object-contain rounded-md cursor-pointer shadow-sm hover:shadow-lg transition-all my-2" // Increased size, using object-contain
+        className="h-20 w-20 object-contain rounded-md cursor-pointer shadow-sm hover:shadow-lg transition-all my-2"
         onClick={(e) => handleImageClick(e, imageUrl)}
       />
     );
@@ -147,11 +147,18 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
         )}
         style={style}
       >
-        {currentStatus === 'mastered' && <Star className="h-5 w-5 text-yellow-400 fill-yellow-400 absolute top-3 right-3 z-10" title="Mastered" />}
-        {(currentStatus === 'learning') && <Lightbulb className="h-5 w-5 text-blue-400 fill-blue-400 absolute top-3 right-3 z-10" title="Learning" />}
+        {/* New Header for Title and Status Icon */}
+        <div className="flex justify-between items-center px-6 pt-4 pb-2">
+          <CardTitle className="text-lg text-primary truncate flex-grow mr-2">{flashcard.title}</CardTitle>
+          <div className="shrink-0"> {/* Container for status icon */}
+            {currentStatus === 'mastered' && <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" title="Mastered" />}
+            {(currentStatus === 'learning') && <Lightbulb className="h-5 w-5 text-blue-400 fill-blue-400" title="Learning" />}
+          </div>
+        </div>
 
+        {/* Flippable Content Area */}
         <div
-          className="flex-grow [perspective:1000px] cursor-pointer p-4 pt-10"
+          className="flex-grow [perspective:1000px] cursor-pointer p-4" // Adjusted padding from pt-10 to p-4
           onClick={handleFlip}
         >
           <div
@@ -162,12 +169,10 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
           >
             {/* Front Face */}
             <div className="absolute inset-0 [backface-visibility:hidden] flex flex-col bg-card rounded-lg border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col items-center p-4 text-center"> {/* Removed justify-center */}
+              {/* CardHeader for title removed */}
+              <CardContent className="flex-grow flex flex-col items-center p-4 text-center">
                 {renderImageThumbnail(flashcard.frontImage, "Front visual")}
-                <ScrollArea className="max-h-[120px] w-full mt-2"> {/* Added mt-2 for spacing if image exists */}
+                <ScrollArea className={cn("w-full mt-2", flashcard.frontImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Question:</p>
                   <div className="text-md prose dark:prose-invert prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.front}</ReactMarkdown>
@@ -178,12 +183,10 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
 
             {/* Back Face */}
             <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col bg-card rounded-lg border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow flex flex-col items-center p-4 text-center"> {/* Removed justify-center */}
+              {/* CardHeader for title removed */}
+              <CardContent className="flex-grow flex flex-col items-center p-4 text-center">
                 {renderImageThumbnail(flashcard.backImage, "Back visual")}
-                <ScrollArea className="max-h-[120px] w-full mt-2"> {/* Added mt-2 for spacing if image exists */}
+                <ScrollArea className={cn("w-full mt-2", flashcard.backImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Answer:</p>
                   <div className="text-md prose dark:prose-invert prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.back}</ReactMarkdown>
