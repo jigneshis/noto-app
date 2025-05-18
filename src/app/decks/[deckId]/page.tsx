@@ -9,10 +9,11 @@ import { FlashcardCard } from '@/components/flashcard-card';
 import { FlashcardForm } from '@/components/flashcard-form';
 import type { Deck, Flashcard } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Search, Filter } from 'lucide-react';
+import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Search, Filter, Edit, MessageSquarePlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { QuickAddFlashcardForm } from '@/components/quick-add-flashcard-form'; // Import QuickAddFlashcardForm
 
 
 export default function DeckPage() {
@@ -27,6 +28,7 @@ export default function DeckPage() {
   const [shareableLink, setShareableLink] = useState('');
   const [copied, setCopied] = useState(false);
   const [flashcardSearchTerm, setFlashcardSearchTerm] = useState('');
+  const [isQuickAddFormVisible, setIsQuickAddFormVisible] = useState(false); // State for quick add form
   const { toast } = useToast();
 
   useEffect(() => {
@@ -84,7 +86,7 @@ export default function DeckPage() {
     const flashcardToUpdate = deck.flashcards.find(fc => fc.id === flashcardId);
     if (flashcardToUpdate) {
       store.updateFlashcardInDeck(deck.id, { ...flashcardToUpdate, status });
-      refreshDeck(); // This re-fetches from store and updates state
+      refreshDeck(); 
       toast({ title: "Status Updated", description: `Flashcard "${flashcardToUpdate.title}" status set to ${status || 'learning'}.` });
     }
   };
@@ -163,6 +165,13 @@ export default function DeckPage() {
             >
                 <PlusCircle className="mr-2 h-5 w-5" /> Add Flashcard
             </Button>
+             <Button 
+                variant="outline"
+                onClick={() => setIsQuickAddFormVisible(!isQuickAddFormVisible)} 
+                className="active:scale-95 transition-transform w-full sm:w-auto"
+            >
+                <MessageSquarePlus className="mr-2 h-5 w-5" /> Quick Add Card
+            </Button>
             {deck.flashcards.length > 0 && (
                 <Link href={`/decks/${deck.id}/quiz`} passHref legacyBehavior>
                     <Button 
@@ -176,6 +185,10 @@ export default function DeckPage() {
             )}
         </div>
       </div>
+
+      {isQuickAddFormVisible && (
+        <QuickAddFlashcardForm deckId={deck.id} onFlashcardAdded={refreshDeck} />
+      )}
 
       <div className="mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-450 ease-out">
         <div className="relative">
@@ -248,3 +261,4 @@ function EmptyFlashcardIcon(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   )
 }
+
