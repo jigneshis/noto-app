@@ -2,7 +2,7 @@
 // src/components/footer.tsx
 'use client';
 
-import { Heart } from 'lucide-react';
+import { Heart, Github } from 'lucide-react';
 import Link from 'next/link';
 
 export function Footer() {
@@ -15,6 +15,18 @@ export function Footer() {
         <p className="mt-1">
           Powered by Turri.ai
         </p>
+        <p className="mt-4">
+          Feel free to get and modify this app according to your needs.
+        </p>
+        <a
+          href="https://github.com/jigneshis/noto-app"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 hover:text-primary hover:underline mt-1"
+        >
+          <Github className="h-4 w-4" />
+          View on GitHub
+        </a>
         <div className="mt-4 flex justify-center items-center gap-x-4 text-xs">
           <Link href="/terms" className="hover:text-primary hover:underline">
             Terms & Conditions
