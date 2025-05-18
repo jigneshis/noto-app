@@ -124,16 +124,15 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
   };
 
   const currentStatus = flashcard.status || 'learning';
-  const currentImage = isFlipped ? flashcard.backImage : flashcard.frontImage;
 
-  const renderImageThumbnail = (imageUrl: string | undefined) => {
+  const renderImageThumbnail = (imageUrl: string | undefined, altText: string) => {
     if (!imageUrl) return null;
     return (
       <img
         data-ai-hint="flashcard visual"
         src={imageUrl}
-        alt={isFlipped ? "Back visual" : "Front visual"}
-        className="h-16 w-16 object-cover rounded-md cursor-pointer shadow-sm hover:shadow-lg transition-all my-2"
+        alt={altText}
+        className="h-20 w-20 object-contain rounded-md cursor-pointer shadow-sm hover:shadow-lg transition-all my-2" // Increased size, using object-contain
         onClick={(e) => handleImageClick(e, imageUrl)}
       />
     );
@@ -166,9 +165,9 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
               </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
-                {renderImageThumbnail(flashcard.frontImage)}
-                <ScrollArea className="max-h-[120px] w-full">
+              <CardContent className="flex-grow flex flex-col items-center p-4 text-center"> {/* Removed justify-center */}
+                {renderImageThumbnail(flashcard.frontImage, "Front visual")}
+                <ScrollArea className="max-h-[120px] w-full mt-2"> {/* Added mt-2 for spacing if image exists */}
                   <p className="text-lg font-semibold">Question:</p>
                   <div className="text-md prose dark:prose-invert prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.front}</ReactMarkdown>
@@ -182,9 +181,9 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg text-primary truncate">{flashcard.title}</CardTitle>
               </CardHeader>
-              <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
-                {renderImageThumbnail(flashcard.backImage)}
-                <ScrollArea className="max-h-[120px] w-full">
+              <CardContent className="flex-grow flex flex-col items-center p-4 text-center"> {/* Removed justify-center */}
+                {renderImageThumbnail(flashcard.backImage, "Back visual")}
+                <ScrollArea className="max-h-[120px] w-full mt-2"> {/* Added mt-2 for spacing if image exists */}
                   <p className="text-lg font-semibold">Answer:</p>
                   <div className="text-md prose dark:prose-invert prose-sm max-w-none">
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.back}</ReactMarkdown>
