@@ -9,7 +9,7 @@ import { FlashcardCard } from '@/components/flashcard-card';
 import { FlashcardForm } from '@/components/flashcard-form';
 import type { Deck, Flashcard } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Lightbulb } from 'lucide-react';
+import { PlusCircle, ArrowLeft, Brain, Copy, Check, Loader2, Search, Filter } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,7 @@ export default function DeckPage() {
   const [editingFlashcard, setEditingFlashcard] = useState<Flashcard | null>(null);
   const [shareableLink, setShareableLink] = useState('');
   const [copied, setCopied] = useState(false);
+  const [flashcardSearchTerm, setFlashcardSearchTerm] = useState('');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -35,7 +36,7 @@ export default function DeckPage() {
       if (currentDeck) {
         setDeck(currentDeck);
         if (typeof window !== 'undefined') {
-             setShareableLink(`${window.location.origin}/decks/${deckId}`); // This link won't work without auth & shared backend
+             setShareableLink(`${window.location.origin}/decks/${deckId}`); 
         }
       } else {
         toast({ title: 'Deck not found', variant: 'destructive' });
@@ -51,14 +52,14 @@ export default function DeckPage() {
     }
   };
 
-  const handleFlashcardSubmit = (flashcardData: Omit<Flashcard, 'id'> | Flashcard) => {
+  const handleFlashcardSubmit = (flashcardData: Omit<Flashcard, 'id' | 'status'> | Flashcard) => {
     if (!deck) return; 
 
     if ('id' in flashcardData && editingFlashcard) { 
-      store.updateFlashcardInDeck(deck.id, flashcardData as Flashcard);
+      store.updateFlashcardInDeck(deck.id, { ...flashcardData, status: flashcardData.status || 'learning' } as Flashcard);
       toast({ title: "Flashcard Updated!", description: `Flashcard "${flashcardData.title}" updated.` });
     } else { 
-      store.addFlashcardToDeck(deck.id, flashcardData);
+      store.addFlashcardToDeck(deck.id, { ...flashcardData, status: (flashcardData as Flashcard).status || 'learning' });
       toast({ title: "Flashcard Created!", description: `Flashcard "${flashcardData.title}" added to deck.` });
     }
     refreshDeck();
@@ -78,6 +79,16 @@ export default function DeckPage() {
     toast({ title: "Flashcard Deleted", description: `Flashcard "${fcToDelete?.title}" deleted.`, variant: 'destructive' });
   };
 
+  const handleUpdateFlashcardStatus = (flashcardId: string, status: Flashcard['status']) => {
+    if (!deck) return;
+    const flashcardToUpdate = deck.flashcards.find(fc => fc.id === flashcardId);
+    if (flashcardToUpdate) {
+      store.updateFlashcardInDeck(deck.id, { ...flashcardToUpdate, status });
+      refreshDeck(); // This re-fetches from store and updates state
+      toast({ title: "Status Updated", description: `Flashcard "${flashcardToUpdate.title}" status set to ${status || 'learning'}.` });
+    }
+  };
+
   const copyToClipboard = () => {
     navigator.clipboard.writeText(shareableLink).then(() => {
       setCopied(true);
@@ -90,6 +101,12 @@ export default function DeckPage() {
   };
 
   const deckAccentColor = deck?.accentColor ? `hsl(${deck.accentColor})` : undefined;
+
+  const filteredFlashcards = deck?.flashcards.filter(fc => 
+    fc.title.toLowerCase().includes(flashcardSearchTerm.toLowerCase()) ||
+    fc.front.toLowerCase().includes(flashcardSearchTerm.toLowerCase()) ||
+    fc.back.toLowerCase().includes(flashcardSearchTerm.toLowerCase())
+  ) || [];
 
   if (isLoadingDeck) { 
     return (
@@ -136,8 +153,8 @@ export default function DeckPage() {
           </div>
       </div>
       
-      <div className="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-400 ease-out">
-        <h2 className="text-xl sm:text-2xl font-semibold">Flashcards ({deck.flashcards.length})</h2>
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-400 ease-out">
+        <h2 className="text-xl sm:text-2xl font-semibold">Flashcards ({filteredFlashcards.length} / {deck.flashcards.length})</h2>
         <div className="flex gap-2 flex-wrap justify-center sm:justify-end w-full sm:w-auto">
             <Button 
                 onClick={() => { setEditingFlashcard(null); setIsFlashcardFormOpen(true); }} 
@@ -160,19 +177,38 @@ export default function DeckPage() {
         </div>
       </div>
 
+      <div className="mb-8 animate-in fade-in slide-in-from-bottom-5 duration-500 delay-450 ease-out">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
+          <Input
+            type="search"
+            placeholder="Search flashcards..."
+            value={flashcardSearchTerm}
+            onChange={(e) => setFlashcardSearchTerm(e.target.value)}
+            className="pl-10 w-full md:max-w-md"
+          />
+        </div>
+      </div>
+
       {deck.flashcards.length === 0 ? (
         <div className="text-center py-10 bg-card rounded-lg shadow-sm border animate-in fade-in zoom-in-95 duration-500 ease-out delay-500">
           <p className="text-xl text-muted-foreground mb-4">This deck is empty. Add some flashcards!</p>
           <EmptyFlashcardIcon className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
         </div>
+      ) : filteredFlashcards.length === 0 ? (
+         <div className="text-center py-10 bg-card rounded-lg shadow-sm border animate-in fade-in zoom-in-95 duration-500 ease-out delay-500">
+          <p className="text-xl text-muted-foreground mb-4">No flashcards match your search.</p>
+          <Filter className="mx-auto h-24 w-24 text-muted-foreground opacity-50" />
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {deck.flashcards.map((flashcard, index) => (
+          {filteredFlashcards.map((flashcard, index) => (
             <FlashcardCard
               key={flashcard.id}
               flashcard={flashcard}
               onEdit={handleEditFlashcard}
               onDelete={handleDeleteFlashcard}
+              onUpdateStatus={handleUpdateFlashcardStatus}
               className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
               style={{ animationDelay: `${(index % 9) * 75}ms` }} 
             />

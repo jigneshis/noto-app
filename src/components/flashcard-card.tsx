@@ -5,7 +5,7 @@ import { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
-import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb } from 'lucide-react';
+import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Tag } from 'lucide-react';
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -20,6 +20,14 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -28,11 +36,12 @@ interface FlashcardCardProps {
   flashcard: Flashcard;
   onEdit: (flashcard: Flashcard) => void;
   onDelete: (flashcardId: string) => void;
+  onUpdateStatus: (flashcardId: string, status: Flashcard['status']) => void;
   className?: string;
   style?: React.CSSProperties;
 }
 
-export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }: FlashcardCardProps) {
+export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, className, style }: FlashcardCardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
@@ -60,16 +69,21 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
     }
   };
 
+  const currentStatus = flashcard.status || 'learning';
+
   return (
     <Card
       className={cn(
-        "w-full shadow-md hover:shadow-2xl transition-shadow duration-300 ease-out min-h-[350px] flex flex-col group",
+        "w-full shadow-md hover:shadow-2xl transition-shadow duration-300 ease-out min-h-[380px] flex flex-col group relative", // Added relative for status badge positioning
         className
       )}
       style={style}
     >
+      {currentStatus === 'mastered' && <Star className="h-5 w-5 text-yellow-400 fill-yellow-400 absolute top-3 right-3 z-10" title="Mastered" />}
+      {(currentStatus === 'learning') && <Lightbulb className="h-5 w-5 text-blue-400 fill-blue-400 absolute top-3 right-3 z-10" title="Learning" />}
+      
       <div
-        className="flex-grow [perspective:1000px] cursor-pointer p-4"
+        className="flex-grow [perspective:1000px] cursor-pointer p-4 pt-10" // Added pt-10 to make space for status badge
         onClick={handleFlip}
       >
         <div
@@ -86,7 +100,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Question:</p>
-                <div className="text-md prose dark:prose-invert prose-sm max-w-none"> {/* Added prose classes for markdown styling */}
+                <div className="text-md prose dark:prose-invert prose-sm max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.front}</ReactMarkdown>
                 </div>
               </ScrollArea>
@@ -101,7 +115,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
             <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center">
               <ScrollArea className="max-h-[120px] w-full">
                 <p className="text-lg font-semibold">Answer:</p>
-                 <div className="text-md prose dark:prose-invert prose-sm max-w-none"> {/* Added prose classes for markdown styling */}
+                 <div className="text-md prose dark:prose-invert prose-sm max-w-none">
                   <ReactMarkdown remarkPlugins={[remarkGfm]}>{flashcard.back}</ReactMarkdown>
                 </div>
               </ScrollArea>
@@ -128,7 +142,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
       )}
 
       <CardFooter className="flex flex-col sm:flex-row justify-between gap-2 pt-4 border-t mt-auto px-6 pb-6">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); handleFlip(); }} className="active:scale-95 transition-transform">
               <RotateCcw className="mr-2 h-4 w-4" /> Flip
           </Button>
@@ -137,7 +151,25 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, className, style }:
               Explain
           </Button>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-1 items-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()} aria-label="Change status" className="active:scale-90 transition-transform">
+                {currentStatus === 'mastered' ? <Star className="h-5 w-5 text-yellow-500" /> : <Lightbulb className="h-5 w-5 text-blue-500" />}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent onClick={(e) => e.stopPropagation()} side="top" align="end">
+              <DropdownMenuLabel>Set Status</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onUpdateStatus(flashcard.id, 'learning')}>
+                <Lightbulb className="mr-2 h-4 w-4" /> Learning
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => onUpdateStatus(flashcard.id, 'mastered')}>
+                <Star className="mr-2 h-4 w-4" /> Mastered
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
           <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onEdit(flashcard); }} aria-label="Edit flashcard" className="active:scale-90 transition-transform">
               <Edit3 className="h-5 w-5" />
           </Button>

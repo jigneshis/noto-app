@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import type { Flashcard } from '@/lib/types';
 import { Loader2 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group'; // Added for status
 
 interface FlashcardFormProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
   const [title, setTitle] = useState('');
   const [front, setFront] = useState(''); // Question
   const [back, setBack] = useState('');   // Answer
+  const [status, setStatus] = useState<Flashcard['status']>('learning'); // Added status state
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -28,10 +30,12 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
       setTitle(initialData.title);
       setFront(initialData.front);
       setBack(initialData.back);
+      setStatus(initialData.status || 'learning'); // Set status from initialData
     } else {
       setTitle('');
       setFront('');
       setBack('');
+      setStatus('learning'); // Default status for new cards
     }
     setIsLoading(false); // Reset loading state
   }, [initialData, isOpen]);
@@ -44,21 +48,19 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
     }
     setIsLoading(true);
     const flashcardData = {
-      id: initialData?.id || crypto.randomUUID(), // Assign new ID if not editing
+      id: initialData?.id || crypto.randomUUID(), 
       title,
       front,
       back,
+      status, // Include status
     };
     try {
       onSubmit(flashcardData);
-      // Simulate async operation for demo purposes if onSubmit is synchronous
-      // await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
       console.error("Error submitting flashcard form:", error);
-      // Optionally show a toast error
     } finally {
       setIsLoading(false);
-       if (!initialData || (initialData && initialData.id === flashcardData.id)) { // only close if submission was "successful"
+       if (!initialData || (initialData && initialData.id === flashcardData.id)) { 
         onClose();
       }
     }
@@ -108,6 +110,24 @@ export function FlashcardForm({ isOpen, onClose, onSubmit, initialData }: Flashc
                 disabled={isLoading}
               />
               <p className="text-xs text-muted-foreground mt-1">Markdown supported (e.g., **bold**, *italic*, - list).</p>
+            </div>
+            <div>
+              <Label className="mb-1 block">Status</Label>
+              <RadioGroup 
+                value={status} 
+                onValueChange={(value: Flashcard['status']) => setStatus(value)} 
+                className="flex gap-4"
+                disabled={isLoading}
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="learning" id="status-learning" />
+                  <Label htmlFor="status-learning">Learning</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="mastered" id="status-mastered" />
+                  <Label htmlFor="status-mastered">Mastered</Label>
+                </div>
+              </RadioGroup>
             </div>
           </div>
           <DialogFooter>

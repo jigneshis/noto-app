@@ -6,7 +6,9 @@ import type { Deck, Flashcard } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RotateCcw, CheckCircle, XCircle, ArrowRight, Repeat, ThumbsUp, ThumbsDown, Lightbulb, Loader2 } from 'lucide-react';
+import { RotateCcw, CheckCircle, XCircle, ArrowRight, Repeat, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -19,6 +21,8 @@ interface QuizViewProps {
   onQuizComplete?: (score: number, total: number) => void;
   className?: string;
 }
+
+type QuizFilter = 'all' | 'learning' | 'mastered';
 
 function shuffleArray<T>(array: T[]): T[] {
   const newArray = [...array];
@@ -37,24 +41,50 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const [score, setScore] = useState(0);
   const [quizFinished, setQuizFinished] = useState(false);
   const [feedbackGiven, setFeedbackGiven] = useState(false);
-
   const [explanation, setExplanation] = useState<string | null>(null);
   const [isExplaining, setIsExplaining] = useState(false);
+  const [quizFilter, setQuizFilter] = useState<QuizFilter>('all');
+  const [quizStarted, setQuizStarted] = useState(false);
   const { toast } = useToast();
 
-  const resetQuiz = useCallback(() => {
-    setShuffledFlashcards(shuffleArray(deck.flashcards));
+  const startTheQuiz = useCallback(() => {
+    let cardsToQuiz = deck.flashcards;
+    if (quizFilter === 'learning') {
+      cardsToQuiz = deck.flashcards.filter(fc => fc.status === 'learning' || !fc.status);
+    } else if (quizFilter === 'mastered') {
+      cardsToQuiz = deck.flashcards.filter(fc => fc.status === 'mastered');
+    }
+
+    if (cardsToQuiz.length === 0) {
+        toast({ title: 'No Cards', description: `No cards match the filter "${quizFilter}". Please adjust filter or add cards.`, variant: 'default', duration: 5000 });
+        setQuizStarted(false); // Stay on filter selection
+        return;
+    }
+    setShuffledFlashcards(shuffleArray(cardsToQuiz));
     setCurrentCardIndex(0);
     setIsAnswerVisible(false);
     setScore(0);
     setQuizFinished(false);
     setFeedbackGiven(false);
     setExplanation(null);
-  }, [deck.flashcards]);
+    setQuizStarted(true);
+  }, [deck.flashcards, quizFilter, toast]);
 
+  const resetQuiz = useCallback(() => {
+    setCurrentCardIndex(0);
+    setIsAnswerVisible(false);
+    setScore(0);
+    setQuizFinished(false);
+    setFeedbackGiven(false);
+    setExplanation(null);
+    setQuizStarted(false); // Show filter options again
+  }, []);
+  
   useEffect(() => {
+    // When the component mounts or deck changes, reset to show filter options
     resetQuiz();
-  }, [resetQuiz]);
+  }, [deck, resetQuiz]);
+
 
   const currentFlashcard = shuffledFlashcards[currentCardIndex];
 
@@ -106,9 +136,46 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
     }
   };
 
-  if (shuffledFlashcards.length === 0) {
-    return <Card><CardContent className="p-6 text-center">This deck has no flashcards to quiz!</CardContent></Card>;
+  if (deck.flashcards.length === 0) {
+    return <Card className={cn("w-full max-w-lg mx-auto shadow-xl", className)}><CardContent className="p-6 text-center">This deck has no flashcards to quiz!</CardContent></Card>;
   }
+
+  if (!quizStarted) {
+    return (
+      <Card className={cn("w-full max-w-lg mx-auto shadow-xl animate-in fade-in zoom-in-95 duration-500 ease-out", className)}>
+        <CardHeader>
+          <CardTitle className="text-2xl text-center text-primary flex items-center justify-center gap-2">
+            <Filter className="h-6 w-6" /> Quiz Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <div>
+            <Label className="text-lg font-semibold mb-2 block">Filter cards by status:</Label>
+            <RadioGroup defaultValue="all" value={quizFilter} onValueChange={(value: QuizFilter) => setQuizFilter(value)} className="space-y-2">
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="all" id="r-all" />
+                <Label htmlFor="r-all">All Cards ({deck.flashcards.length})</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="learning" id="r-learning" />
+                <Label htmlFor="r-learning">Learning ({deck.flashcards.filter(fc => fc.status === 'learning' || !fc.status).length})</Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="mastered" id="r-mastered" />
+                <Label htmlFor="r-mastered">Mastered ({deck.flashcards.filter(fc => fc.status === 'mastered').length})</Label>
+              </div>
+            </RadioGroup>
+          </div>
+        </CardContent>
+        <CardFooter className="flex flex-col gap-3">
+          <Button onClick={startTheQuiz} size="lg" className="w-full active:scale-95 transition-transform">
+            Start Quiz
+          </Button>
+        </CardFooter>
+      </Card>
+    );
+  }
+
 
   if (quizFinished) {
     return (
@@ -136,7 +203,16 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
 
 
   if (!currentFlashcard) {
-     return <Card><CardContent className="p-6 text-center">Loading quiz...</CardContent></Card>;
+     // This can happen briefly if startTheQuiz is called and cardsToQuiz is empty, though that's handled above.
+     // Or if shuffledFlashcards is empty for other reasons (should not happen if quizStarted is true).
+     return (
+      <Card className={cn("w-full max-w-lg mx-auto shadow-xl", className)}>
+        <CardContent className="p-6 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-2" />
+          Preparing quiz...
+        </CardContent>
+      </Card>
+     );
   }
 
 
