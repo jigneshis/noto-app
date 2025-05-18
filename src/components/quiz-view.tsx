@@ -6,12 +6,13 @@ import type { Deck, Flashcard } from '@/lib/types';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { RotateCcw, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter, ArrowRight, Repeat, Sparkles, Volume2 } from 'lucide-react'; // Added Volume2
+import { RotateCcw, ThumbsUp, ThumbsDown, Lightbulb, Loader2, Filter, ArrowRight, Repeat, Sparkles, Volume2 } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent } from "@/components/ui/dialog"; // Added Dialog
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -46,6 +47,8 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
   const [quizFilter, setQuizFilter] = useState<QuizFilter>('all');
   const [quizStarted, setQuizStarted] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false);
+  const [largeImageSrc, setLargeImageSrc] = useState<string | undefined>(undefined);
   const { toast } = useToast();
 
   const quizCardRef = useRef<HTMLDivElement>(null);
@@ -94,7 +97,6 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
 
   useEffect(() => {
     resetQuiz();
-    // Cleanup speech synthesis on component unmount
     return () => {
       if (window.speechSynthesis && window.speechSynthesis.speaking) {
         window.speechSynthesis.cancel();
@@ -194,6 +196,12 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
       };
       window.speechSynthesis.speak(utterance);
     }, 50);
+  };
+
+  const handleImageClick = (e: React.MouseEvent, imageUrl: string) => {
+    e.stopPropagation();
+    setLargeImageSrc(imageUrl);
+    setIsImageModalOpen(true);
   };
   
   useEffect(() => {
@@ -317,91 +325,111 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
      );
   }
 
-  const currentImage = isAnswerVisible ? currentFlashcard.backImage : currentFlashcard.frontImage;
+  const imageToDisplay = isAnswerVisible ? currentFlashcard.backImage : currentFlashcard.frontImage;
+
+  const renderImageThumbnailInQuiz = (imageUrl: string | undefined) => {
+    if (!imageUrl) return null;
+    return (
+      <img
+        data-ai-hint="flashcard visual"
+        src={imageUrl}
+        alt="Flashcard visual"
+        className="h-20 w-20 object-cover rounded-md cursor-pointer shadow-sm hover:shadow-lg transition-all my-2 mx-auto"
+        onClick={(e) => handleImageClick(e, imageUrl)}
+      />
+    );
+  };
 
   return (
-    <Card ref={quizCardRef} className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)} tabIndex={-1}>
-      <CardHeader className="pb-2">
-        <div className="flex justify-between items-center mb-2">
-            <CardTitle className="text-lg sm:text-xl text-primary truncate">{currentFlashcard.title}</CardTitle>
-            <span className="text-xs sm:text-sm text-muted-foreground">
-                Card {currentCardIndex + 1} of {shuffledFlashcards.length}
-            </span>
-        </div>
-        <Progress value={((currentCardIndex + 1) / shuffledFlashcards.length) * 100} className="w-full" />
-      </CardHeader>
-
-      <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center min-h-[200px]">
-        {currentImage && (
-          <img data-ai-hint="flashcard visual" src={currentImage} alt="Flashcard visual" className="max-h-32 w-auto object-contain mb-3 rounded shadow-sm" />
-        )}
-        <ScrollArea className="w-full max-h-[150px] mb-4 animate-in fade-in duration-300">
-            <div className="text-xl sm:text-2xl font-semibold mb-2 prose dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.front}</ReactMarkdown>
-            </div>
-        </ScrollArea>
-        {isAnswerVisible && (
-          <ScrollArea className="w-full max-h-[150px] p-3 bg-muted/50 rounded-md animate-in fade-in duration-300">
-            <div className="text-lg sm:text-xl text-accent prose dark:prose-invert max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.back}</ReactMarkdown>
-            </div>
-          </ScrollArea>
-        )}
-        {isExplaining && (
-          <div className="mt-4 text-center animate-in fade-in duration-300">
-            <Loader2 className="h-6 w-6 animate-spin text-accent mx-auto" />
-            <p className="text-sm text-muted-foreground">Getting explanation...</p>
+    <>
+      <Card ref={quizCardRef} className={cn("w-full max-w-2xl mx-auto shadow-xl flex flex-col min-h-[500px]", className)} tabIndex={-1}>
+        <CardHeader className="pb-2">
+          <div className="flex justify-between items-center mb-2">
+              <CardTitle className="text-lg sm:text-xl text-primary truncate">{currentFlashcard.title}</CardTitle>
+              <span className="text-xs sm:text-sm text-muted-foreground">
+                  Card {currentCardIndex + 1} of {shuffledFlashcards.length}
+              </span>
           </div>
-        )}
-        {explanation && (
-          <ScrollArea className="mt-4 p-3 bg-secondary/30 rounded-md max-h-[100px] w-full animate-in fade-in duration-300">
-            <div className="text-sm border-l-2 border-accent pl-2 text-left">
-              <p className="font-semibold text-accent flex items-center gap-1"><Sparkles size={16}/> Simplified:</p>
-              <div className="prose dark:prose-invert prose-sm max-w-none">
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{explanation}</ReactMarkdown>
-              </div>
-            </div>
-          </ScrollArea>
-        )}
-      </CardContent>
+          <Progress value={((currentCardIndex + 1) / shuffledFlashcards.length) * 100} className="w-full" />
+        </CardHeader>
 
-      <CardFooter className="flex flex-col gap-4 pt-4 border-t">
-        {!isAnswerVisible ? (
-          <Button onClick={handleShowAnswer} className="w-full active:scale-95 transition-transform" size="lg">
-            <RotateCcw className="mr-2 h-5 w-5" /> Show Answer
-          </Button>
-        ) : (
-          <>
-            {!feedbackGiven ? (
-              <div className="flex flex-col sm:flex-row justify-around w-full gap-3">
-                <Button onClick={() => handleFeedback(false)} variant="destructive" className="flex-1 active:scale-95 transition-transform" size="lg">
-                  <ThumbsDown className="mr-2 h-5 w-5" /> Incorrect
-                </Button>
-                <Button onClick={() => handleFeedback(true)} variant="default" className="bg-green-500 hover:bg-green-600 text-white flex-1 active:scale-95 transition-transform" size="lg">
-                  <ThumbsUp className="mr-2 h-5 w-5" /> Correct
-                </Button>
+        <CardContent className="flex-grow flex flex-col justify-center items-center p-4 text-center min-h-[200px]">
+          {renderImageThumbnailInQuiz(imageToDisplay)}
+          <ScrollArea className="w-full max-h-[150px] mb-4 animate-in fade-in duration-300">
+              <div className="text-xl sm:text-2xl font-semibold mb-2 prose dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.front}</ReactMarkdown>
               </div>
-            ) : (
-              <Button onClick={moveToNextCard} className="w-full active:scale-95 transition-transform" size="lg">
-                Next Card <ArrowRight className="ml-2 h-5 w-5" />
-              </Button>
-            )}
-          </>
-        )}
-        <div className="flex flex-col sm:flex-row w-full sm:justify-between items-center mt-2 gap-2 sm:gap-0">
-            <div className="flex gap-2 items-center">
-                <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
-                    {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
-                    Explain this
-                </Button>
-                <Button variant="outline" size="sm" onClick={handleSpeak} disabled={isSpeaking || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
-                    <Volume2 className="mr-2 h-4 w-4" /> {isSpeaking ? 'Speaking...' : 'Speak'}
-                </Button>
+          </ScrollArea>
+          {isAnswerVisible && (
+            <ScrollArea className="w-full max-h-[150px] p-3 bg-muted/50 rounded-md animate-in fade-in duration-300">
+              <div className="text-lg sm:text-xl text-accent prose dark:prose-invert max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{currentFlashcard.back}</ReactMarkdown>
+              </div>
+            </ScrollArea>
+          )}
+          {isExplaining && (
+            <div className="mt-4 text-center animate-in fade-in duration-300">
+              <Loader2 className="h-6 w-6 animate-spin text-accent mx-auto" />
+              <p className="text-sm text-muted-foreground">Getting explanation...</p>
             </div>
-          <span className="text-sm font-medium text-muted-foreground">Score: {score}</span>
-        </div>
-      </CardFooter>
-    </Card>
+          )}
+          {explanation && (
+            <ScrollArea className="mt-4 p-3 bg-secondary/30 rounded-md max-h-[100px] w-full animate-in fade-in duration-300">
+              <div className="text-sm border-l-2 border-accent pl-2 text-left">
+                <p className="font-semibold text-accent flex items-center gap-1"><Sparkles size={16}/> Simplified:</p>
+                <div className="prose dark:prose-invert prose-sm max-w-none">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{explanation}</ReactMarkdown>
+                </div>
+              </div>
+            </ScrollArea>
+          )}
+        </CardContent>
+
+        <CardFooter className="flex flex-col gap-4 pt-4 border-t">
+          {!isAnswerVisible ? (
+            <Button onClick={handleShowAnswer} className="w-full active:scale-95 transition-transform" size="lg">
+              <RotateCcw className="mr-2 h-5 w-5" /> Show Answer
+            </Button>
+          ) : (
+            <>
+              {!feedbackGiven ? (
+                <div className="flex flex-col sm:flex-row justify-around w-full gap-3">
+                  <Button onClick={() => handleFeedback(false)} variant="destructive" className="flex-1 active:scale-95 transition-transform" size="lg">
+                    <ThumbsDown className="mr-2 h-5 w-5" /> Incorrect
+                  </Button>
+                  <Button onClick={() => handleFeedback(true)} variant="default" className="bg-green-500 hover:bg-green-600 text-white flex-1 active:scale-95 transition-transform" size="lg">
+                    <ThumbsUp className="mr-2 h-5 w-5" /> Correct
+                  </Button>
+                </div>
+              ) : (
+                <Button onClick={moveToNextCard} className="w-full active:scale-95 transition-transform" size="lg">
+                  Next Card <ArrowRight className="ml-2 h-5 w-5" />
+                </Button>
+              )}
+            </>
+          )}
+          <div className="flex flex-col sm:flex-row w-full sm:justify-between items-center mt-2 gap-2 sm:gap-0">
+              <div className="flex gap-2 items-center">
+                  <Button variant="outline" size="sm" onClick={handleExplain} disabled={isExplaining || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
+                      {isExplaining ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Lightbulb className="mr-2 h-4 w-4" />}
+                      Explain this
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={handleSpeak} disabled={isSpeaking || !currentFlashcard} className="w-full sm:w-auto active:scale-95 transition-transform">
+                      <Volume2 className="mr-2 h-4 w-4" /> {isSpeaking ? 'Speaking...' : 'Speak'}
+                  </Button>
+              </div>
+            <span className="text-sm font-medium text-muted-foreground">Score: {score}</span>
+          </div>
+        </CardFooter>
+      </Card>
+
+      {largeImageSrc && (
+        <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
+          <DialogContent className="max-w-3xl max-h-[90vh] p-2 sm:p-4">
+            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[85vh] object-contain mx-auto rounded-md" />
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
   );
 }
-
