@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader as ShadCardHeader, CardTitle as ShadCardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
 import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Volume2, Download } from 'lucide-react';
@@ -28,7 +28,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog, DialogContent, DialogFooter as ModalFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader as ModalHeader, DialogTitle as ModalTitle, DialogFooter as ModalFooter } from "@/components/ui/dialog";
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -149,7 +149,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
       >
         {/* New Header for Title and Status Icon */}
         <div className="flex justify-between items-center px-6 pt-4 pb-2">
-          <CardTitle className="text-lg text-primary truncate flex-grow mr-2">{flashcard.title}</CardTitle>
+          <ShadCardTitle className="text-lg text-primary truncate flex-grow mr-2">{flashcard.title}</ShadCardTitle>
           <div className="shrink-0"> {/* Container for status icon */}
             {currentStatus === 'mastered' && <Star className="h-5 w-5 text-yellow-400 fill-yellow-400" title="Mastered" />}
             {(currentStatus === 'learning') && <Lightbulb className="h-5 w-5 text-blue-400 fill-blue-400" title="Learning" />}
@@ -169,7 +169,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
           >
             {/* Front Face */}
             <div className="absolute inset-0 [backface-visibility:hidden] flex flex-col bg-card rounded-lg border shadow-sm overflow-hidden">
-              <CardContent className="flex-grow flex flex-col items-center p-4 text-center [transform:translateZ(0px)]">
+              <CardContent className="flex-grow flex flex-col items-center p-4 [transform:translateZ(0px)]">
                 {renderImageThumbnail(flashcard.frontImage, "Front visual")}
                 <ScrollArea className={cn("w-full mt-2", flashcard.frontImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Question:</p>
@@ -182,7 +182,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
 
             {/* Back Face */}
             <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col bg-card rounded-lg border shadow-sm overflow-hidden">
-              <CardContent className="flex-grow flex flex-col items-center p-4 text-center [transform:translateZ(0px)]">
+              <CardContent className="flex-grow flex flex-col items-center p-4 [transform:translateZ(0px)]">
                 {renderImageThumbnail(flashcard.backImage, "Back visual")}
                 <ScrollArea className={cn("w-full mt-2", flashcard.backImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Answer:</p>
@@ -278,7 +278,10 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
       {isImageModalOpen && largeImageSrc && (
         <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] p-2 sm:p-4 flex flex-col">
-            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[calc(85vh-4rem)] object-contain mx-auto rounded-md" />
+            <ModalHeader>
+              <ModalTitle>Flashcard Image</ModalTitle>
+            </ModalHeader>
+            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[calc(80vh-6rem)] object-contain mx-auto rounded-md my-4" />
             <ModalFooter className="pt-4 justify-center">
               <Button onClick={handleDownloadImage} variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" /> Download Image

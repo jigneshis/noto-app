@@ -12,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { explainContentSimplyAction } from '@/lib/actions';
 import { useToast } from '@/hooks/use-toast';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Dialog, DialogContent, DialogFooter as ModalFooter } from "@/components/ui/dialog"; 
+import { Dialog, DialogContent, DialogHeader as ModalHeader, DialogTitle as ModalTitle, DialogFooter as ModalFooter } from "@/components/ui/dialog"; 
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -437,7 +437,10 @@ export function QuizView({ deck, onQuizComplete, className }: QuizViewProps) {
       {isImageModalOpen && largeImageSrc && (
         <Dialog open={isImageModalOpen} onOpenChange={setIsImageModalOpen}>
           <DialogContent className="max-w-3xl max-h-[90vh] p-2 sm:p-4 flex flex-col">
-            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[calc(85vh-4rem)] object-contain mx-auto rounded-md" />
+            <ModalHeader>
+              <ModalTitle>Flashcard Image</ModalTitle>
+            </ModalHeader>
+            <img src={largeImageSrc} alt="Enlarged flashcard visual" className="max-w-full max-h-[calc(80vh-6rem)] object-contain mx-auto rounded-md my-4" />
             <ModalFooter className="pt-4 justify-center">
               <Button onClick={handleDownloadImage} variant="outline" size="sm">
                 <Download className="mr-2 h-4 w-4" /> Download Image
