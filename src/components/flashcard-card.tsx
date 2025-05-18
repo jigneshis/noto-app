@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card'; // Removed CardHeader import as it's no longer used directly in faces
+import { Card, CardContent, CardFooter, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Flashcard } from '@/lib/types';
 import { Edit3, Trash2, RotateCcw, Sparkles, Loader2, Lightbulb, Star, Volume2, Download } from 'lucide-react';
@@ -158,7 +158,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
 
         {/* Flippable Content Area */}
         <div
-          className="flex-grow [perspective:1000px] cursor-pointer p-4" // Adjusted padding from pt-10 to p-4
+          className="flex-grow [perspective:1000px] cursor-pointer p-4"
           onClick={handleFlip}
         >
           <div
@@ -169,8 +169,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
           >
             {/* Front Face */}
             <div className="absolute inset-0 [backface-visibility:hidden] flex flex-col bg-card rounded-lg border shadow-sm">
-              {/* CardHeader for title removed */}
-              <CardContent className="flex-grow flex flex-col items-center p-4 text-center">
+              <CardContent className="flex-grow flex flex-col items-center p-4 text-center [transform:translateZ(0px)]">
                 {renderImageThumbnail(flashcard.frontImage, "Front visual")}
                 <ScrollArea className={cn("w-full mt-2", flashcard.frontImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Question:</p>
@@ -183,8 +182,7 @@ export function FlashcardCard({ flashcard, onEdit, onDelete, onUpdateStatus, cla
 
             {/* Back Face */}
             <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] flex flex-col bg-card rounded-lg border shadow-sm">
-              {/* CardHeader for title removed */}
-              <CardContent className="flex-grow flex flex-col items-center p-4 text-center">
+              <CardContent className="flex-grow flex flex-col items-center p-4 text-center [transform:translateZ(0px)]">
                 {renderImageThumbnail(flashcard.backImage, "Back visual")}
                 <ScrollArea className={cn("w-full mt-2", flashcard.backImage ? "max-h-[120px]" : "max-h-[180px]")}>
                   <p className="text-lg font-semibold">Answer:</p>
