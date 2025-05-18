@@ -3,6 +3,7 @@
 'use client';
 
 import { Heart } from 'lucide-react';
+import Link from 'next/link';
 
 export function Footer() {
   return (
@@ -14,6 +15,15 @@ export function Footer() {
         <p className="mt-1">
           Powered by Turri.ai
         </p>
+        <div className="mt-4 flex justify-center items-center gap-x-4 text-xs">
+          <Link href="/terms" className="hover:text-primary hover:underline">
+            Terms & Conditions
+          </Link>
+          <span className="text-muted-foreground/50">|</span>
+          <Link href="/privacy" className="hover:text-primary hover:underline">
+            Privacy Policy
+          </Link>
+        </div>
       </div>
     </footer>
   );
