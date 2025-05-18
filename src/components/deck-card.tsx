@@ -26,7 +26,7 @@ interface DeckCardProps {
   deck: Deck;
   onEdit: (deck: Deck) => void;
   onDelete: (deckId: string) => void;
-  onDuplicate: (deckId: string) => void; // New prop for duplication
+  onDuplicate: (deckId: string) => void;
   className?: string;
   style?: React.CSSProperties;
 }
@@ -42,7 +42,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
   return (
     <Card 
       className={cn(
-        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group",
+        "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[380px]", // Ensure min-height is applied
         className
       )}
       style={{ ...style, borderTop: deckAccentColor ? `3px solid ${deckAccentColor}` : undefined }}
@@ -86,7 +86,7 @@ export function DeckCard({ deck, onEdit, onDelete, onDuplicate, className, style
           </div>
         )}
       </CardContent>
-      <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4">
+      <CardFooter className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-4 border-t mt-auto">
         <div className="grid grid-cols-1 sm:flex sm:gap-2 w-full sm:w-auto gap-2">
           <Link href={`/decks/${deck.id}`} passHref legacyBehavior>
             <Button 
