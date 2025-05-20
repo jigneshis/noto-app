@@ -1,15 +1,16 @@
 
 'use client';
 
-import type { Deck, Flashcard } from './types';
+import type { Deck, Flashcard, Note } from './types'; // Added Note
 
-const DECKS_STORAGE_KEY = 'cardWeaverDecks';
+const DECKS_STORAGE_KEY = 'notoDecks'; // Renamed for clarity
+const NOTES_STORAGE_KEY = 'notoNotes'; // New key for notes
 
+// --- Deck Functions ---
 export function getDecks(): Deck[] {
   if (typeof window === 'undefined') return [];
   const storedDecks = localStorage.getItem(DECKS_STORAGE_KEY);
   const decks = storedDecks ? JSON.parse(storedDecks) : [];
-  // Ensure all decks have necessary fields with defaults
   return decks.map((deck: Deck) => ({
     ...deck,
     flashcards: (deck.flashcards || []).map(fc => ({
@@ -63,10 +64,7 @@ export function saveDeck(deckToSave: Deck): Deck {
   };
 
   if (existingDeckIndex > -1) {
-    const originalFlashcards = decks[existingDeckIndex].flashcards;
-    // Preserve existing flashcards if deckToSave doesn't provide new ones (e.g. when only deck metadata is updated)
-    // but ensure new fields like images are potentially updated or kept from deckToSave
-     completeDeckData.flashcards = deckToSave.flashcards.length > 0
+    completeDeckData.flashcards = deckToSave.flashcards.length > 0
       ? deckToSave.flashcards.map(fc => ({
           ...fc,
           id: fc.id || crypto.randomUUID(),
@@ -74,7 +72,7 @@ export function saveDeck(deckToSave: Deck): Deck {
           frontImage: fc.frontImage || undefined,
           backImage: fc.backImage || undefined,
         }))
-      : originalFlashcards.map(fc => ({ // if deckToSave.flashcards is empty, keep original ones
+      : decks[existingDeckIndex].flashcards.map(fc => ({ 
           ...fc,
           status: fc.status || 'learning',
           frontImage: fc.frontImage || undefined,
@@ -97,7 +95,7 @@ export function deleteDeck(id: string): void {
   localStorage.setItem(DECKS_STORAGE_KEY, JSON.stringify(decks));
 }
 
-export function addFlashcardToDeck(deckId: string, flashcard: Omit<Flashcard, 'id' | 'status'> & { status?: Flashcard['status'] }): Flashcard | undefined {
+export function addFlashcardToDeck(deckId: string, flashcard: Omit<Flashcard, 'id' | 'status'> & { status?: Flashcard['status'], frontImage?: string, backImage?: string }): Flashcard | undefined {
   const deck = getDeck(deckId);
   if (!deck) return undefined;
 
@@ -139,3 +137,50 @@ export function deleteFlashcardFromDeck(deckId: string, flashcardId: string): vo
   saveDeck(deck);
 }
 
+// --- Note Functions ---
+export function getNotes(): Note[] {
+  if (typeof window === 'undefined') return [];
+  const storedNotes = localStorage.getItem(NOTES_STORAGE_KEY);
+  const notes = storedNotes ? JSON.parse(storedNotes) : [];
+  // Ensure all notes have necessary fields with defaults
+  return notes.map((note: Note) => ({
+    ...note,
+    tags: note.tags || [],
+    accentColor: note.accentColor || undefined,
+    createdAt: note.createdAt || new Date().toISOString(),
+    updatedAt: note.updatedAt || new Date().toISOString(),
+  }));
+}
+
+export function getNote(id: string): Note | undefined {
+  const notes = getNotes();
+  return notes.find(n => n.id === id);
+}
+
+export function saveNote(noteToSave: Note): Note {
+  const notes = getNotes();
+  const existingNoteIndex = notes.findIndex(n => n.id === noteToSave.id);
+  const now = new Date().toISOString();
+
+  const completeNoteData: Note = {
+    ...noteToSave,
+    updatedAt: now,
+    createdAt: existingNoteIndex > -1 ? notes[existingNoteIndex].createdAt : now,
+    tags: noteToSave.tags || [],
+    accentColor: noteToSave.accentColor || undefined,
+  };
+
+  if (existingNoteIndex > -1) {
+    notes[existingNoteIndex] = completeNoteData;
+  } else {
+    notes.push(completeNoteData);
+  }
+  localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+  return completeNoteData;
+}
+
+export function deleteNote(id: string): void {
+  let notes = getNotes();
+  notes = notes.filter(note => note.id !== id);
+  localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+}

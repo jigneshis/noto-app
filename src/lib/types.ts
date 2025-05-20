@@ -23,3 +23,12 @@ export interface Deck {
 // Type for imported deck structure (can be a single deck or an array of decks)
 export type ImportedDecks = Deck | Deck[];
 
+export interface Note {
+  id: string;
+  title: string;
+  content: string; // Markdown supported
+  createdAt: string; // ISO date string
+  updatedAt: string; // ISO date string
+  accentColor?: string; // HSL string, e.g., "210 90% 50%"
+  tags?: string[];
+}
