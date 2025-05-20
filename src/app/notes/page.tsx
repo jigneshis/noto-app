@@ -87,8 +87,9 @@ export default function NotesPage() {
 
   if (isLoadingNotes) {
     return (
-      <div className="container mx-auto py-8 px-4 flex justify-center items-center min-h-[calc(100vh-8rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <div className="container mx-auto py-8 px-4 flex flex-col justify-center items-center min-h-[calc(100vh-8rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+        <p className="text-lg text-muted-foreground">Loading notes...</p>
       </div>
     );
   }
