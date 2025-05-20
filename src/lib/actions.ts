@@ -3,8 +3,9 @@
 import { generateFlashcardsFromText as generateFlashcardsFromTextFlow } from '@/ai/flows/generate-flashcards-from-text';
 import { summarizeContentIntoFlashcards as summarizeContentIntoFlashcardsFlow } from '@/ai/flows/summarize-content-into-flashcards';
 import { explainContentSimply as explainContentSimplyFlow } from '@/ai/flows/explain-content-simply';
-import { generateImageForFlashcard as generateImageForFlashcardFlow } from '@/ai/flows/generate-image-for-flashcard.ts'; // Added new flow
-import type { Flashcard } from './types';
+import { generateImageForFlashcard as generateImageForFlashcardFlow } from '@/ai/flows/generate-image-for-flashcard';
+import { analyzeNoteContent as analyzeNoteContentFlow } from '@/ai/flows/analyze-note-content'; // New import
+import type { Flashcard, NoteAnalysisResult } from './types';
 
 export async function generateFlashcardsFromTextAction(text: string): Promise<Omit<Flashcard, 'id' | 'status'>[]> {
   try {
@@ -13,7 +14,7 @@ export async function generateFlashcardsFromTextAction(text: string): Promise<Om
         title: fc.title,
         front: fc.front,
         back: fc.back,
-        frontImage: undefined, // Initialize new fields
+        frontImage: undefined,
         backImage: undefined,
     }));
   } catch (error) {
@@ -33,7 +34,7 @@ export async function summarizeContentIntoFlashcardsAction(content: string): Pro
         title: fc.title,
         front: fc.front,
         back: fc.back,
-        frontImage: undefined, // Initialize new fields
+        frontImage: undefined,
         backImage: undefined,
     }));
   } catch (error) {
@@ -74,3 +75,16 @@ export async function generateImageForFlashcardAction(prompt: string): Promise<s
   }
 }
 
+export async function analyzeNoteContentAction(noteContent: string): Promise<NoteAnalysisResult> {
+  try {
+    const result = await analyzeNoteContentFlow({ noteContent });
+    return result;
+  } catch (error) {
+    console.error("Error analyzing note content:", error);
+    let errorMessage = "Failed to analyze note content using AI.";
+    if (error instanceof Error && error.message) {
+      errorMessage += ` Details: ${error.message}`;
+    }
+    throw new Error(errorMessage);
+  }
+}

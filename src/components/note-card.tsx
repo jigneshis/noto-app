@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { Note } from '@/lib/types';
-import { FileText, Edit3, Trash2, Tag } from 'lucide-react';
+import { FileText, Edit3, Trash2, Tag, Pin, PinOff } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,11 +21,14 @@ import {
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import * as store from '@/lib/localStorageStore'; // For pin toggle
+import { useToast } from '@/hooks/use-toast'; // For pin toggle feedback
 
 interface NoteCardProps {
   note: Note;
   onEdit: (note: Note) => void;
   onDelete: (noteId: string) => void;
+  onPinToggle: (noteId: string) => void; // Callback to refresh list after pinning
   className?: string;
   style?: React.CSSProperties;
 }
@@ -41,33 +44,57 @@ function truncateText(text: string, maxLength: number): string {
   return text;
 }
 
-export function NoteCard({ note, onEdit, onDelete, className, style }: NoteCardProps) {
+export function NoteCard({ note, onEdit, onDelete, onPinToggle, className, style }: NoteCardProps) {
   const noteAccentColor = note.accentColor ? `hsl(${note.accentColor})` : undefined;
   const displayedNoteName = truncateText(note.title, MAX_NOTE_NAME_LENGTH);
-  const contentPreview = note.content.replace(/#/g, '').replace(/\*/g, '').replace(/_/g, ''); // Basic markdown removal for preview
+  const contentPreview = note.content.replace(/#/g, '').replace(/\*/g, '').replace(/_/g, '');
+  const { toast } = useToast();
+
+  const handlePinToggle = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent link navigation if card is wrapped in Link
+    const updatedNote = { ...note, isPinned: !note.isPinned };
+    store.saveNote(updatedNote);
+    onPinToggle(note.id); // Notify parent to refresh/re-sort
+    toast({
+      title: `Note ${updatedNote.isPinned ? 'Pinned' : 'Unpinned'}`,
+      description: `"${truncateText(note.title, MAX_NOTE_NAME_LENGTH)}" has been ${updatedNote.isPinned ? 'pinned' : 'unpinned'}.`,
+    });
+  };
 
   return (
     <Card
       className={cn(
         "flex flex-col shadow-lg hover:shadow-2xl hover:scale-[1.03] transition-all duration-300 ease-out group min-h-[280px]",
+        note.isPinned && "border-primary/50 ring-2 ring-primary/30",
         className
       )}
       style={{ ...style, borderTop: noteAccentColor ? `3px solid ${noteAccentColor}` : undefined }}
     >
-      <CardHeader>
-        <CardTitle
-          className="flex items-center gap-2 text-primary"
-          style={noteAccentColor ? { color: noteAccentColor } : {}}
-        >
-          <FileText
-            className="h-6 w-6"
+      <CardHeader className="flex flex-row justify-between items-start">
+        <div className="flex-grow">
+          <CardTitle
+            className="flex items-center gap-2 text-primary"
             style={noteAccentColor ? { color: noteAccentColor } : {}}
-          />
-          {displayedNoteName}
-        </CardTitle>
-        <CardDescription className="text-xs">
-          Last updated: {new Date(note.updatedAt).toLocaleDateString()}
-        </CardDescription>
+          >
+            <FileText
+              className="h-6 w-6"
+              style={noteAccentColor ? { color: noteAccentColor } : {}}
+            />
+            {displayedNoteName}
+          </CardTitle>
+          <CardDescription className="text-xs mt-1">
+            Last updated: {new Date(note.updatedAt).toLocaleDateString()}
+          </CardDescription>
+        </div>
+         <Button
+            variant="ghost"
+            size="icon"
+            onClick={handlePinToggle}
+            aria-label={note.isPinned ? "Unpin note" : "Pin note"}
+            className="ml-auto shrink-0 text-muted-foreground hover:text-primary active:scale-90 transition-transform"
+          >
+            {note.isPinned ? <Pin className="h-5 w-5 fill-primary text-primary" /> : <PinOff className="h-5 w-5" />}
+          </Button>
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         <div className="text-sm text-muted-foreground line-clamp-3 prose prose-sm dark:prose-invert max-w-none">

@@ -1,22 +1,25 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { NoteCard } from '@/components/note-card';
 import { NoteForm } from '@/components/note-form';
 import type { Note } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, FileText as FileTextIconLucide, Loader2, Search, Tag, X, Info } from 'lucide-react';
+import { PlusCircle, FileText as FileTextIconLucide, Loader2, Search, Tag, X, Info, ArrowUpDown } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
+type SortOption = 'createdAt_desc' | 'createdAt_asc' | 'updatedAt_desc' | 'updatedAt_asc' | 'title_asc' | 'title_desc';
 
 export default function NotesPage() {
   const [notes, setNotes] = useState<Note[]>([]);
@@ -26,15 +29,20 @@ export default function NotesPage() {
   const [isLoadingNotes, setIsLoadingNotes] = useState(true);
   const [noteSearchTerm, setNoteSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>('createdAt_desc');
+
+  const fetchNotes = () => {
+    setNotes(store.getNotes());
+  };
 
   useEffect(() => {
     setIsLoadingNotes(true);
-    setNotes(store.getNotes().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    fetchNotes();
     setIsLoadingNotes(false);
   }, []);
 
   const refreshNotes = () => {
-    setNotes(store.getNotes().sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    fetchNotes();
   };
 
   const handleNoteSubmit = (noteData: Note) => {
@@ -56,6 +64,10 @@ export default function NotesPage() {
     refreshNotes();
     toast({ title: "Note Deleted", description: `Note "${noteToDelete?.title}" has been deleted.`, variant: 'destructive' });
   };
+  
+  const handlePinToggle = () => {
+    refreshNotes(); // Re-fetch and re-sort notes
+  };
 
   const allTags = useMemo(() => {
     const tagSet = new Set<string>();
@@ -73,16 +85,60 @@ export default function NotesPage() {
     setSelectedTags([]);
   };
 
-  const filteredNotes = useMemo(() => {
-    return notes
-      .filter(note =>
-        (note.title.toLowerCase().includes(noteSearchTerm.toLowerCase()) ||
-        (note.content && note.content.toLowerCase().includes(noteSearchTerm.toLowerCase())))
-      )
-      .filter(note =>
-        selectedTags.length === 0 || selectedTags.every(selTag => note.tags?.includes(selTag))
+  const sortedAndFilteredNotes = useMemo(() => {
+    let processedNotes = [...notes];
+
+    // Filter by search term
+    processedNotes = processedNotes.filter(note =>
+      (note.title.toLowerCase().includes(noteSearchTerm.toLowerCase()) ||
+      (note.content && note.content.toLowerCase().includes(noteSearchTerm.toLowerCase())))
+    );
+
+    // Filter by selected tags
+    if (selectedTags.length > 0) {
+      processedNotes = processedNotes.filter(note =>
+        selectedTags.every(selTag => note.tags?.includes(selTag))
       );
-  }, [notes, noteSearchTerm, selectedTags]);
+    }
+
+    // Separate pinned notes
+    const pinnedNotes = processedNotes.filter(note => note.isPinned);
+    const unpinnedNotes = processedNotes.filter(note => !note.isPinned);
+
+    // Sort unpinned notes
+    unpinnedNotes.sort((a, b) => {
+      switch (sortOption) {
+        case 'title_asc':
+          return a.title.localeCompare(b.title);
+        case 'title_desc':
+          return b.title.localeCompare(a.title);
+        case 'updatedAt_desc':
+          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case 'updatedAt_asc':
+          return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        case 'createdAt_asc':
+          return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'createdAt_desc':
+        default:
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+    
+    // Sort pinned notes by the same criteria (among themselves)
+    pinnedNotes.sort((a, b) => {
+       switch (sortOption) {
+        case 'title_asc': return a.title.localeCompare(b.title);
+        case 'title_desc': return b.title.localeCompare(a.title);
+        case 'updatedAt_desc': return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+        case 'updatedAt_asc': return new Date(a.updatedAt).getTime() - new Date(b.updatedAt).getTime();
+        case 'createdAt_asc': return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        case 'createdAt_desc': default: return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      }
+    });
+
+
+    return [...pinnedNotes, ...unpinnedNotes];
+  }, [notes, noteSearchTerm, selectedTags, sortOption]);
 
 
   if (isLoadingNotes) {
@@ -109,25 +165,43 @@ export default function NotesPage() {
         </div>
 
         <div className="mb-8 p-4 bg-card border rounded-lg shadow-sm animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
-          <div className="flex items-center gap-2 mb-4">
-            <Search className="h-5 w-5 text-muted-foreground" />
-            <Input
-              type="search"
-              placeholder="Search notes by title or content..."
-              value={noteSearchTerm}
-              onChange={(e) => setNoteSearchTerm(e.target.value)}
-              className="w-full md:max-w-md"
-            />
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
-                  <Info className="h-5 w-5" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p className="text-sm">Search by note title or its content.</p>
-              </TooltipContent>
-            </Tooltip>
+          <div className="flex flex-col md:flex-row items-center gap-4 mb-4">
+            <div className="flex items-center gap-2 w-full md:flex-grow">
+                <Search className="h-5 w-5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  placeholder="Search notes by title or content..."
+                  value={noteSearchTerm}
+                  onChange={(e) => setNoteSearchTerm(e.target.value)}
+                  className="flex-grow"
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground shrink-0">
+                      <Info className="h-5 w-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p className="text-sm">Search by note title or its content.</p>
+                  </TooltipContent>
+                </Tooltip>
+            </div>
+            <div className="flex items-center gap-2 w-full md:w-auto md:min-w-[200px]">
+                <ArrowUpDown className="h-5 w-5 text-muted-foreground" />
+                <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+                    <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Sort by..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="createdAt_desc">Created: Newest</SelectItem>
+                        <SelectItem value="createdAt_asc">Created: Oldest</SelectItem>
+                        <SelectItem value="updatedAt_desc">Updated: Newest</SelectItem>
+                        <SelectItem value="updatedAt_asc">Updated: Oldest</SelectItem>
+                        <SelectItem value="title_asc">Title: A-Z</SelectItem>
+                        <SelectItem value="title_desc">Title: Z-A</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
           </div>
 
           {allTags.length > 0 && (
@@ -157,8 +231,7 @@ export default function NotesPage() {
           )}
         </div>
 
-
-        {filteredNotes.length === 0 ? (
+        {sortedAndFilteredNotes.length === 0 ? (
           <div className="text-center py-10 bg-card border rounded-lg shadow-sm animate-in fade-in zoom-in-95 duration-500 ease-out delay-300">
             <p className="text-xl text-muted-foreground mb-4">
               {notes.length === 0 ? 'No notes yet. Create your first one!' : 'No notes match your search criteria or selected tags.'}
@@ -167,12 +240,13 @@ export default function NotesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredNotes.map((note, index) => (
+            {sortedAndFilteredNotes.map((note, index) => (
               <NoteCard
                 key={note.id}
                 note={note}
                 onEdit={handleEditNote}
                 onDelete={handleDeleteNote}
+                onPinToggle={handlePinToggle}
                 className="animate-in fade-in-50 zoom-in-95 duration-300 ease-out"
                 style={{ animationDelay: `${(index % 6) * 75}ms` }}
               />

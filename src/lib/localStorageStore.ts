@@ -3,8 +3,8 @@
 
 import type { Deck, Flashcard, Note } from './types'; // Added Note
 
-const DECKS_STORAGE_KEY = 'notoDecks'; // Renamed for clarity
-const NOTES_STORAGE_KEY = 'notoNotes'; // New key for notes
+const DECKS_STORAGE_KEY = 'notoDecks';
+const NOTES_STORAGE_KEY = 'notoNotes';
 
 // --- Deck Functions ---
 export function getDecks(): Deck[] {
@@ -72,7 +72,7 @@ export function saveDeck(deckToSave: Deck): Deck {
           frontImage: fc.frontImage || undefined,
           backImage: fc.backImage || undefined,
         }))
-      : decks[existingDeckIndex].flashcards.map(fc => ({ 
+      : decks[existingDeckIndex].flashcards.map(fc => ({
           ...fc,
           status: fc.status || 'learning',
           frontImage: fc.frontImage || undefined,
@@ -142,13 +142,13 @@ export function getNotes(): Note[] {
   if (typeof window === 'undefined') return [];
   const storedNotes = localStorage.getItem(NOTES_STORAGE_KEY);
   const notes = storedNotes ? JSON.parse(storedNotes) : [];
-  // Ensure all notes have necessary fields with defaults
   return notes.map((note: Note) => ({
     ...note,
     tags: note.tags || [],
     accentColor: note.accentColor || undefined,
     createdAt: note.createdAt || new Date().toISOString(),
     updatedAt: note.updatedAt || new Date().toISOString(),
+    isPinned: note.isPinned || false, // Ensure isPinned defaults to false
   }));
 }
 
@@ -168,6 +168,7 @@ export function saveNote(noteToSave: Note): Note {
     createdAt: existingNoteIndex > -1 ? notes[existingNoteIndex].createdAt : now,
     tags: noteToSave.tags || [],
     accentColor: noteToSave.accentColor || undefined,
+    isPinned: noteToSave.isPinned || false, // Ensure isPinned is saved
   };
 
   if (existingNoteIndex > -1) {

@@ -8,8 +8,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch'; // New import
 import type { Note } from '@/lib/types';
-import { Loader2, Palette, Tags, FileText } from 'lucide-react';
+import { Loader2, Palette, Tags, FileText, Pin as PinIcon } from 'lucide-react';
 
 interface NoteFormProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
   const [content, setContent] = useState('');
   const [accentColor, setAccentColor] = useState<string | undefined>(undefined);
   const [tagsInput, setTagsInput] = useState('');
+  const [isPinned, setIsPinned] = useState(false); // New state for pinning
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -42,11 +44,13 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
       setContent(initialData.content || '');
       setAccentColor(initialData.accentColor || undefined);
       setTagsInput((initialData.tags || []).join(', '));
+      setIsPinned(initialData.isPinned || false); // Set initial pinned state
     } else {
       setTitle('');
       setContent('');
       setAccentColor(undefined);
       setTagsInput('');
+      setIsPinned(false); // Default to not pinned for new notes
     }
     setIsLoading(false);
   }, [initialData, isOpen]);
@@ -71,6 +75,7 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
       content,
       accentColor: accentColor === "undefined" || accentColor === "" ? undefined : accentColor,
       tags: processedTags,
+      isPinned, // Include pinned state
       createdAt: initialData?.createdAt || now,
       updatedAt: now,
     };
@@ -124,50 +129,64 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
               className="min-h-[200px] text-sm"
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="note-tags" className="flex items-center">
-              <Tags className="mr-2 h-4 w-4 text-muted-foreground" />
-              Tags (comma-separated)
-            </Label>
-            <Input
-              id="note-tags"
-              value={tagsInput}
-              onChange={(e) => setTagsInput(e.target.value)}
-              disabled={isLoading}
-              placeholder="e.g., work, personal, ideas"
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="note-tags" className="flex items-center">
+                <Tags className="mr-2 h-4 w-4 text-muted-foreground" />
+                Tags (comma-separated)
+              </Label>
+              <Input
+                id="note-tags"
+                value={tagsInput}
+                onChange={(e) => setTagsInput(e.target.value)}
+                disabled={isLoading}
+                placeholder="e.g., work, personal, ideas"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="note-accentColor" className="flex items-center">
+                <Palette className="mr-2 h-4 w-4 text-muted-foreground" />
+                Accent Color
+              </Label>
+              <Select
+                value={accentColor || "undefined"}
+                onValueChange={(value) => setAccentColor(value === "undefined" ? undefined : value)}
+                disabled={isLoading}
+              >
+                <SelectTrigger id="note-accentColor" className="w-full">
+                  <SelectValue placeholder="Default Theme Color" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>Choose a color</SelectLabel>
+                    <SelectItem value="undefined">Default Theme Color</SelectItem>
+                    {accentColorOptions.map(color => (
+                      <SelectItem key={color.value} value={color.value}>
+                        <div className="flex items-center">
+                          <span
+                            className="w-4 h-4 rounded-full mr-2 border"
+                            style={{ backgroundColor: `hsl(${color.value})` }}
+                          ></span>
+                          {color.name}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="note-accentColor" className="flex items-center">
-              <Palette className="mr-2 h-4 w-4 text-muted-foreground" />
-              Accent Color
+          <div className="flex items-center space-x-2 pt-2">
+            <Switch
+                id="note-isPinned"
+                checked={isPinned}
+                onCheckedChange={setIsPinned}
+                disabled={isLoading}
+            />
+            <Label htmlFor="note-isPinned" className="flex items-center gap-2">
+                <PinIcon className={`h-4 w-4 ${isPinned ? 'text-primary fill-primary': 'text-muted-foreground'}`} />
+                Pin this note
             </Label>
-            <Select
-              value={accentColor || "undefined"}
-              onValueChange={(value) => setAccentColor(value === "undefined" ? undefined : value)}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="note-accentColor" className="w-full">
-                <SelectValue placeholder="Default Theme Color" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Choose a color</SelectLabel>
-                  <SelectItem value="undefined">Default Theme Color</SelectItem>
-                  {accentColorOptions.map(color => (
-                    <SelectItem key={color.value} value={color.value}>
-                      <div className="flex items-center">
-                        <span
-                          className="w-4 h-4 rounded-full mr-2 border"
-                          style={{ backgroundColor: `hsl(${color.value})` }}
-                        ></span>
-                        {color.name}
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
           </div>
         </form>
         <DialogFooter className="pt-4 border-t">

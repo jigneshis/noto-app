@@ -31,4 +31,11 @@ export interface Note {
   updatedAt: string; // ISO date string
   accentColor?: string; // HSL string, e.g., "210 90% 50%"
   tags?: string[];
+  isPinned?: boolean; // New field for pinning notes
+}
+
+// New type for AI analysis result
+export interface NoteAnalysisResult {
+  summary: string;
+  keywords: string[];
 }
