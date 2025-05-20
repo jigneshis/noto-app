@@ -8,7 +8,7 @@ import { NoteCard } from '@/components/note-card';
 import { NoteForm } from '@/components/note-form';
 import type { Note } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { PlusCircle, FileText as FileTextIconLucide, Loader2, Search, Tag, X, Info, ArrowUpDown } from 'lucide-react';
+import { PlusCircle, FileText as FileTextIconLucide, Loader2, Search, Tag, X, Info, ArrowUpDown, Layers } from 'lucide-react'; // Added Layers
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -18,6 +18,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import Link from 'next/link'; // Added Link
 
 type SortOption = 'createdAt_desc' | 'createdAt_asc' | 'updatedAt_desc' | 'updatedAt_asc' | 'title_asc' | 'title_desc';
 
@@ -158,6 +159,11 @@ export default function NotesPage() {
             <FileTextIconLucide className="h-8 w-8" /> My Notes
           </h1>
           <div className="flex gap-2 flex-wrap justify-center sm:justify-end animate-in fade-in slide-in-from-top-5 duration-500 delay-100 ease-out w-full sm:w-auto">
+            <Link href="/" passHref legacyBehavior>
+              <Button variant="outline" className="active:scale-95 transition-transform w-full sm:w-auto">
+                <Layers className="mr-2 h-5 w-5" /> Back to Decks
+              </Button>
+            </Link>
             <Button onClick={() => { setEditingNote(null); setIsNoteFormOpen(true); }} className="active:scale-95 transition-transform w-full sm:w-auto">
               <PlusCircle className="mr-2 h-5 w-5" /> Create New Note
             </Button>
