@@ -1,22 +1,23 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { NoteForm } from '@/components/note-form';
 import type { Note, NoteAnalysisResult } from '@/lib/types';
 import * as store from '@/lib/localStorageStore';
-import { ArrowLeft, Edit, FileText, Loader2, Pin as PinIcon, PinOff as PinOffIcon, Search, Sparkles, X as XIcon } from 'lucide-react';
+import { ArrowLeft, Edit, FileText, Loader2, Pin as PinIcon, PinOff as PinOffIcon, Search, Sparkles, X as XIcon, Download, Printer, FileOutput } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown, { type Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter as NoteCardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader as ModalHeader, DialogTitle as ModalTitle, DialogDescription as ModalDescription, DialogFooter as ModalFooter } from '@/components/ui/dialog';
 import { analyzeNoteContentAction } from '@/lib/actions';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 // Component for highlighting text
 const HighlightedText = ({ text, highlight }: { text: string; highlight: string }) => {
@@ -86,7 +87,7 @@ export default function NoteViewPage() {
     if (!note) return;
     const updatedNote = { ...note, isPinned: !note.isPinned };
     store.saveNote(updatedNote);
-    setNote(updatedNote); // Update local state immediately
+    setNote(updatedNote); 
     toast({
       title: `Note ${updatedNote.isPinned ? 'Pinned' : 'Unpinned'}`,
       description: `"${note.title}" has been ${updatedNote.isPinned ? 'pinned.' : 'unpinned.'}`,
@@ -110,8 +111,30 @@ export default function NoteViewPage() {
         setIsAnalyzing(false);
     }
   };
+
+  const handleExportNote = () => {
+    if (!note) return;
+    const filename = `${note.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'note'}.md`;
+    const blob = new Blob([note.content], { type: 'text/markdown;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) { 
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        toast({ title: "Note Exported", description: `"${note.title}" exported as ${filename}` });
+    } else {
+        toast({ title: "Export Failed", description: "Your browser doesn't support direct downloads.", variant: "destructive" });
+    }
+  };
+
+  const handlePrintNote = () => {
+    window.print();
+  };
   
-  // Custom renderer for react-markdown to highlight text
   const markdownComponents: Components = {
     text: (props) => {
       const { children } = props;
@@ -120,7 +143,6 @@ export default function NoteViewPage() {
       }
       return <>{children}</>;
     },
-    // Ensure other elements pass through correctly
     p: ({node, ...props}) => <p {...props} />,
     h1: ({node, ...props}) => <h1 {...props} />,
     h2: ({node, ...props}) => <h2 {...props} />,
@@ -138,9 +160,17 @@ export default function NoteViewPage() {
         return inline ? <code className={className} {...props}><HighlightedText text={String(children)} highlight={intraNoteSearchTerm} /></code> : <code className={className} {...props}>{children}</code>
     },
     a: ({node, ...props}) => <a {...props} />,
-    // Add other elements as needed or use a more generic text node traversal if performance allows.
   };
 
+  const wordCount = useMemo(() => {
+    if (!note?.content) return 0;
+    return note.content.trim().split(/\s+/).filter(Boolean).length;
+  }, [note?.content]);
+
+  const charCount = useMemo(() => {
+    if (!note?.content) return 0;
+    return note.content.length;
+  }, [note?.content]);
 
   if (isLoadingNote) {
     return (
@@ -157,8 +187,8 @@ export default function NoteViewPage() {
   const noteAccentColor = note.accentColor ? `hsl(${note.accentColor})` : undefined;
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+    <div className="container mx-auto py-8 px-4 print:py-0">
+      <div className="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 print:hidden">
         <Button
           variant="outline"
           onClick={() => router.push('/notes')}
@@ -182,19 +212,19 @@ export default function NoteViewPage() {
                 className="animate-in fade-in slide-in-from-right-5 duration-500 delay-100 ease-out active:scale-95 transition-transform w-full sm:w-auto"
             >
                 {isAnalyzing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4 text-accent" />}
-                Analyze with AI
+                Analyze
             </Button>
             <Button
               onClick={() => setIsNoteFormOpen(true)}
               className="animate-in fade-in slide-in-from-right-5 duration-500 delay-150 ease-out active:scale-95 transition-transform w-full sm:w-auto"
               style={noteAccentColor ? { backgroundColor: noteAccentColor, color: 'hsl(var(--primary-foreground))' } : {}}
             >
-              <Edit className="mr-2 h-4 w-4" /> Edit Note
+              <Edit className="mr-2 h-4 w-4" /> Edit Details
             </Button>
         </div>
       </div>
 
-      <div className="mb-6 relative animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out">
+      <div className="mb-6 relative animate-in fade-in slide-in-from-bottom-5 duration-500 delay-200 ease-out print:hidden">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground pointer-events-none" />
         <Input
             type="search"
@@ -211,30 +241,34 @@ export default function NoteViewPage() {
       </div>
 
       <Card
-        className="w-full animate-in fade-in zoom-in-95 duration-500 delay-250 ease-out"
+        className="w-full animate-in fade-in zoom-in-95 duration-500 delay-250 ease-out print:shadow-none print:border-none"
         style={noteAccentColor ? { borderTop: `4px solid ${noteAccentColor}` } : {}}
       >
-        <CardHeader>
+        <CardHeader className="print:pt-0">
           <CardTitle
             className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2"
             style={noteAccentColor ? { color: noteAccentColor } : {}}
           >
-            <FileText className="h-7 w-7"/>
+            <FileText className="h-7 w-7 print:hidden"/>
             {note.title}
           </CardTitle>
-          <CardDescription className="text-xs">
-            Created: {new Date(note.createdAt).toLocaleDateString()} | Last Updated: {new Date(note.updatedAt).toLocaleDateString()}
-          </CardDescription>
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
+            <span>Created: {new Date(note.createdAt).toLocaleDateString()}</span>
+            <span>Last Updated: {new Date(note.updatedAt).toLocaleDateString()}</span>
+            <span>Words: {wordCount}</span>
+            <span>Characters: {charCount}</span>
+          </div>
            {note.tags && note.tags.length > 0 && (
-            <div className="flex flex-wrap gap-1 pt-2">
+            <div className="flex flex-wrap gap-1 pt-2 print:hidden">
                 {note.tags.map(tag => (
                 <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
                 ))}
             </div>
             )}
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="max-h-[calc(100vh-20rem)]">
+        <Separator className="my-2 print:hidden" />
+        <CardContent className="print:p-0">
+          <ScrollArea className="max-h-[calc(100vh-24rem)] print:max-h-none print:overflow-visible">
             <div className="prose dark:prose-invert max-w-none prose-sm sm:prose-base lg:prose-lg xl:prose-xl 2xl:prose-2xl">
               <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
                 {note.content}
@@ -242,6 +276,15 @@ export default function NoteViewPage() {
             </div>
           </ScrollArea>
         </CardContent>
+        <Separator className="my-2 print:hidden" />
+        <NoteCardFooter className="flex flex-col sm:flex-row justify-end gap-2 print:hidden">
+            <Button variant="outline" onClick={handleExportNote} size="sm">
+                <Download className="mr-2 h-4 w-4" /> Export as Markdown
+            </Button>
+            <Button variant="outline" onClick={handlePrintNote} size="sm">
+                <Printer className="mr-2 h-4 w-4" /> Print Note
+            </Button>
+        </NoteCardFooter>
       </Card>
 
       <NoteForm
@@ -286,3 +329,4 @@ export default function NoteViewPage() {
     </div>
   );
 }
+

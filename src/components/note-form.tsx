@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react'; // Added useMemo
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue, SelectGroup, SelectLabel } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch'; // New import
+import { Switch } from '@/components/ui/switch'; 
 import type { Note } from '@/lib/types';
 import { Loader2, Palette, Tags, FileText, Pin as PinIcon } from 'lucide-react';
 
@@ -35,7 +35,7 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
   const [content, setContent] = useState('');
   const [accentColor, setAccentColor] = useState<string | undefined>(undefined);
   const [tagsInput, setTagsInput] = useState('');
-  const [isPinned, setIsPinned] = useState(false); // New state for pinning
+  const [isPinned, setIsPinned] = useState(false); 
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -44,16 +44,24 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
       setContent(initialData.content || '');
       setAccentColor(initialData.accentColor || undefined);
       setTagsInput((initialData.tags || []).join(', '));
-      setIsPinned(initialData.isPinned || false); // Set initial pinned state
+      setIsPinned(initialData.isPinned || false); 
     } else {
       setTitle('');
       setContent('');
       setAccentColor(undefined);
       setTagsInput('');
-      setIsPinned(false); // Default to not pinned for new notes
+      setIsPinned(false); 
     }
     setIsLoading(false);
   }, [initialData, isOpen]);
+
+  const wordCount = useMemo(() => {
+    return content.trim().split(/\s+/).filter(Boolean).length;
+  }, [content]);
+
+  const charCount = useMemo(() => {
+    return content.length;
+  }, [content]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -75,7 +83,7 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
       content,
       accentColor: accentColor === "undefined" || accentColor === "" ? undefined : accentColor,
       tags: processedTags,
-      isPinned, // Include pinned state
+      isPinned, 
       createdAt: initialData?.createdAt || now,
       updatedAt: now,
     };
@@ -98,10 +106,10 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <FileText className="h-6 w-6 text-primary" />
-            {initialData ? 'Edit Note' : 'Create New Note'}
+            {initialData ? 'Edit Note Details' : 'Create New Note'}
           </DialogTitle>
           <DialogDescription>
-            {initialData ? 'Modify your existing note.' : 'Craft a new note. Markdown is supported for content.'}
+            {initialData ? 'Modify your existing note details.' : 'Craft a new note. Markdown is supported for content.'}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex-grow overflow-y-auto pr-2 space-y-6 py-4">
@@ -128,6 +136,10 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
               placeholder="Start writing your note here..."
               className="min-h-[200px] text-sm"
             />
+            <div className="text-xs text-muted-foreground flex justify-end gap-2">
+              <span>Words: {wordCount}</span>
+              <span>Characters: {charCount}</span>
+            </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -204,3 +216,4 @@ export function NoteForm({ isOpen, onClose, onSubmit, initialData }: NoteFormPro
     </Dialog>
   );
 }
+

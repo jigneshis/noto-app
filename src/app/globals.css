@@ -107,3 +107,71 @@
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--primary));
 }
+
+/* Print styles */
+@media print {
+  body {
+    font-size: 12pt;
+    color: black !important; /* Ensure text is black for printing */
+    background-color: white !important; /* Ensure background is white */
+    -webkit-print-color-adjust: exact; /* Ensure colors and backgrounds print */
+    print-color-adjust: exact;
+  }
+  .print\:hidden {
+    display: none !important;
+  }
+  .print\:block {
+    display: block !important;
+  }
+  .print\:shadow-none {
+    box-shadow: none !important;
+  }
+  .print\:border-none {
+    border: none !important;
+  }
+  .print\:p-0 {
+    padding: 0 !important;
+  }
+  .print\:pt-0 {
+    padding-top: 0 !important;
+  }
+  .print\:max-h-none {
+    max-height: none !important;
+  }
+  .print\:overflow-visible {
+    overflow: visible !important;
+  }
+  /* Ensure prose styles are print-friendly */
+  .prose {
+    color: black !important;
+  }
+  .prose a {
+    color: #007bff !important; /* Standard blue for links */
+    text-decoration: underline !important;
+  }
+  .prose code {
+    color: black !important;
+    background-color: #f0f0f0 !important; /* Light gray background for code */
+  }
+  .prose pre {
+    background-color: #f0f0f0 !important;
+  }
+  .prose pre code {
+     color: black !important;
+  }
+  .prose strong {
+    color: black !important;
+  }
+  .prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+    color: black !important;
+  }
+  .container {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Hide specific interactive elements */
+  header, footer, nav, aside, [role="dialog"], [role="alertdialog"], [data-tooltip-content] {
+    display: none !important;
+  }
+}
