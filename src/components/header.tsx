@@ -4,10 +4,15 @@
 import Link from 'next/link';
 import { Logo } from '@/components/icons';
 import { ThemeToggle } from './theme-toggle';
-import { Button } from '@/components/ui/button'; // Added
-import { FileText } from 'lucide-react'; // Added
+import { Button } from '@/components/ui/button';
+import { FileText, Layers } from 'lucide-react'; // Added Layers
+import { usePathname } from 'next/navigation'; // Added usePathname
 
 export function Header() {
+  const pathname = usePathname();
+
+  const isNotesPage = pathname === '/notes';
+  const NotesIcon = isNotesPage ? Layers : FileText;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -23,7 +28,7 @@ export function Header() {
         <nav className="flex flex-1 items-center space-x-2 sm:space-x-4">
            <Link href="/notes" passHref legacyBehavior>
             <Button variant="ghost" size="sm" className="text-sm font-medium text-muted-foreground hover:text-primary transition-colors">
-              <FileText className="mr-0 sm:mr-2 h-4 w-4" />
+              <NotesIcon className="mr-0 sm:mr-2 h-4 w-4" />
               <span className="hidden sm:inline">Notes</span>
             </Button>
           </Link>
